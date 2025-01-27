@@ -2,7 +2,8 @@ import { useState } from 'react';
 
 export default function CreateNote() {
   const [notes, setNotes] = useState([]);
-  const [newNote, setNewNote] = useState(null);
+  const [newNote, setNewNote] = useState({ title: '', content: '', tag: 0 }); 
+  const [tagInput, setTagInput] = useState(0);
 
   const handleCreateNote = async () => {
     const response = await fetch('/api/notes/create', {
@@ -13,10 +14,10 @@ export default function CreateNote() {
       body: JSON.stringify({
         title: '',
         content: '',
-        authorId: 1, // Replace this with a valid integer `authorId` from your database
+        tag: 0, // Default tag
+        authorId: 1, 
       }),
     });
-
     const note = await response.json();
     setNewNote(note);
     setNotes([...notes, note]);
@@ -26,18 +27,54 @@ export default function CreateNote() {
     setNewNote({ ...newNote, content: e.target.value });
   };
 
+  const handleTitleChange = (e) => {
+    setNewNote({ ...newNote, title: e.target.value });
+  };
+
+  const handleTagChange = (e) => {
+    const tagValue = parseInt(e.target.value, 10) || 0; 
+    setNewNote({ ...newNote, tag: tagValue });
+    setTagInput(tagValue);
+  };
+
   const saveNote = async () => {
-    // Add logic to save updated content back to the database
-    console.log('Saving note:', newNote);
+    if (!newNote || !newNote.id) return;
+    const response = await fetch('/api/notes/update', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        id: newNote.id,
+        title: newNote.title,
+        content: newNote.content,
+        tag: newNote.tag,
+      }),
+    });
+
+    if (response.ok) {
+      const updatedNote = await response.json();
+      setNotes((prevNotes) =>
+        prevNotes.map((note) => (note.id === updatedNote.id ? updatedNote : note))
+      );
+      alert('Note saved successfully!');
+    } else {
+      alert('Failed to save the note.');
+    }
   };
 
   return (
     <div>
       <button onClick={handleCreateNote}>Create Note</button>
-
       {newNote && (
         <div>
           <h2>Editing Note</h2>
+          <input
+            type="text"
+            value={newNote.title}
+            onChange={handleTitleChange}
+            placeholder="Enter note title"
+          />
           <textarea
             value={newNote.content}
             onChange={handleContentChange}
@@ -45,16 +82,22 @@ export default function CreateNote() {
             rows="10"
             cols="50"
           />
+          <input
+            type="number"
+            value={tagInput}
+            onChange={handleTagChange}
+            placeholder="Enter tag (number)"
+          />
           <button onClick={saveNote}>Save Note</button>
         </div>
       )}
-
       <div>
         <h2>All Notes</h2>
         {notes.map((note) => (
           <div key={note.id}>
             <h3>{note.title}</h3>
             <p>{note.content}</p>
+            <p>Tag: {note.tag}</p>
           </div>
         ))}
       </div>
