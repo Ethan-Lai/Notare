@@ -10,12 +10,12 @@ export function getAIService(): IAIService {
 			console.error("AI API key is missing.");
 		}
 
-		const endpoint = process.env.GEMINI_API_ENDPOINT || "";
-		if (!endpoint) {
-			console.error("AI API endpoint is missing.")
+		const model = process.env.GEMINI_MODEL || "";
+		if (!model) {
+			console.error("AI Model not specified.");
 		}
 
-		instance = new GeminiService(apiKey, endpoint);
+		instance = new GeminiService(apiKey, model);
 	}
 
 	return instance;
