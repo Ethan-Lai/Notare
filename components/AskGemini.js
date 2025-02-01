@@ -2,16 +2,14 @@ import { useState } from 'react';
 
 export default function AskGemini() {
     const [question, setQuestion] = useState('');
-    const [prev_question, setPrevQuestion] = useState('');
+    const [prev_question, setPrevQuestion] = useState([]);
     const [response, setResponse] = useState('');
+    const [prev_response, setPrevResponse] = useState([]);
 
     const handleAskQuestion = (e) => {
         setQuestion(e.target.value);
     }
 
-    const handlePrevQuestion = (e) => {
-        setPrevQuestion(e.target.value);
-    }
 
     const generateAnswer = async () => {
         try {
@@ -25,7 +23,8 @@ export default function AskGemini() {
             
             const data = await response.json();
             setResponse(data.message);
-            setPrevQuestion(question);
+            setPrevQuestion([...prev_question, question]);
+            setPrevResponse([...prev_response, data.message]);
             setQuestion(''); // Clear the input after sending
         } catch (error) {
             console.error('Error:', error);
@@ -35,12 +34,18 @@ export default function AskGemini() {
 
     return ( 
         <div> 
-            {prev_question && ( // If there is a question
-                <div style={{ textAlign: 'right', backgroundColor: 'darkblue' }}>{prev_question}</div>
-            )}
-            {response && ( // If there is a response
-                <div dangerouslySetInnerHTML={{ __html: response }} /> // May need to check for security, but this is fine for now since gemini is responding in HTML
-            )}
+            {prev_question.map((q, index) => (
+                <div key={index}>
+                    <div style={{ textAlign: 'right', backgroundColor: 'darkblue', color: 'white', padding: '8px', margin: '4px', borderRadius: '8px' }}>
+                        {q}
+                    </div>
+                    {prev_response[index] && (
+                        <div style={{ textAlign: 'left', backgroundColor: 'black', color: 'white', padding: '8px', margin: '4px', borderRadius: '8px' }}>
+                            <div dangerouslySetInnerHTML={{ __html: prev_response[index] }} />
+                        </div>
+                    )}
+                </div>
+            ))}
             
             <form 
                 onSubmit={(e) => {
