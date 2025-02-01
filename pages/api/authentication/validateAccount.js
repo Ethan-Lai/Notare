@@ -8,23 +8,34 @@ export default async function handler(req, res) {
     console.error('the email received is: ' + email);
 
     // Check if email or password is missing
-    if (!email || !password) {
+    if ((!email && !username) || !password) {
       return res.status(400).json({ message: 'Email and password are required' });
     }
 
     try {
-      console.error('before');
-      const user = await prisma.user.findUnique({
+      let user = null;
+      if (email)
+      {
+        user = await prisma.user.findUnique({
         where: { email: email },
-      });
-      console.error('after');
+        });
+      }
 
-      if (!user) {
+      else if (username)
+      {
+        user = await prisma.user.findUnique({
+        where: { name: username },
+        });
+      }
+
+      if (user == null) {
         return res.status(404).json({ message: 'User not found' });
       }
 
       // compare the elements.
-      if (username == user.name && email == user.email && password == user.password) {
+console.log(user.password)
+      if ((username == user.name && password == user.password) ||
+         (email == user.email && password == user.password)) {
         return res.status(200).json({
         message: 'Login successful',
           user: {

@@ -11,8 +11,8 @@ const LoginForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!email || !username || !password) {
-      alert('Please fill in all fields');
+    if (!email && !username) {
+      alert('Please fill in either username or email.');
       return;
     }
     const response = await fetch("/api/authentication/validateAccount", {
@@ -51,7 +51,6 @@ const LoginForm = () => {
             id="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required
           />
         </div>
         <div>
@@ -61,7 +60,6 @@ const LoginForm = () => {
             id="username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            required
           />
         </div>
         <div>
