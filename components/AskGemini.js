@@ -3,7 +3,7 @@ import { useState } from 'react';
 export default function AskGemini() {
     const [question, setQuestion] = useState('');
     const [prev_question, setPrevQuestion] = useState([]);
-    
+    const [prev_response, setPrevResponse] = useState([]);
 
     const handleAskQuestion = (e) => {
         setQuestion(e.target.value);
@@ -22,6 +22,7 @@ export default function AskGemini() {
             
             const data = await response.json();
             setPrevQuestion([...prev_question, question]);
+            setPrevResponse([...prev_response, data.message]);
             
             setQuestion(''); // Clear the input after sending
         } catch (error) {
@@ -37,7 +38,11 @@ export default function AskGemini() {
                     <div style={{ textAlign: 'right', backgroundColor: 'darkblue', color: 'white', padding: '8px', margin: '4px', borderRadius: '8px' }}>
                         {q}
                     </div>
-                    
+                    {prev_response[index] && (
+                        <div style={{ textAlign: 'left', backgroundColor: 'black', color: 'white', padding: '8px', margin: '4px', borderRadius: '8px' }}>
+                            <div dangerouslySetInnerHTML={{ __html: prev_response[index] }} />
+                        </div>
+                    )}
                 </div>
             ))}
             
