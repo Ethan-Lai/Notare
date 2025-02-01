@@ -1,11 +1,12 @@
-// components/LoginForm.js
 import { useState } from 'react';
+import { useRouter } from 'next/router';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,7 +35,8 @@ const LoginForm = () => {
       } else if (!response.ok){
         alert('Bad!')
       } else {
-        alert('Success!')
+        alert('Success!');
+        router.push('/');
       }
     };
 
