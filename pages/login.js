@@ -4,7 +4,7 @@ import LoginForm from '../components/LoginForm';
 const LoginPage = () => {
   return (
     <div className="login-page">
-      <h1>Notare Sign-In Page</h1>
+      <h1>Notare Login Page</h1>
       <LoginForm />
     </div>
   );

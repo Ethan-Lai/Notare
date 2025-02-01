@@ -13,11 +13,9 @@ export default async function handler(req, res) {
     }
 
     try {
-      console.error('before');
       const user = await prisma.user.findUnique({
         where: { email: email },
       });
-      console.error('after');
 
       if (user) {
         return res.status(409).json({ message: 'User Account Exists' });

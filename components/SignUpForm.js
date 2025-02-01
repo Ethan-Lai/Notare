@@ -1,7 +1,6 @@
-// components/LoginForm.js
 import { useState } from 'react';
 
-const LoginForm = () => {
+const SignUpForm = () => {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -38,9 +37,9 @@ const LoginForm = () => {
     };
 
   return (
-    <div className="login-container">
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit} className="login-form">
+    <div className="signup-container">
+      <h2>SignUp</h2>
+      <form onSubmit={handleSubmit} className="signup-form">
         <div>
           <label htmlFor="email">Email</label>
           <input
@@ -72,10 +71,10 @@ const LoginForm = () => {
           />
         </div>
         {error && <p className="error">{error}</p>}
-        <button type="submit">Login</button>
+        <button type="submit">Sign Up</button>
       </form>
     </div>
   );
 };
 
-export default LoginForm;
+export default SignUpForm;

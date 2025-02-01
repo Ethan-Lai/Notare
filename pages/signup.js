@@ -1,13 +1,12 @@
-// pages/login.js
-import LoginForm from '../components/SignUpForm';
+import SignUpForm from '../components/SignUpForm';
 
-const LoginPage = () => {
+const SignupPage = () => {
   return (
-    <div className="login-page">
+    <div className="signup-page">
       <h1>Notare Sign-Up Page</h1>
-      <LoginForm />
+      <SignUpForm />
     </div>
   );
 };
 
-export default LoginPage;
+export default SignupPage;
