@@ -4,7 +4,8 @@ import AskGemini from '../components/AskGemini';
 import UploadNote from '../components/UploadNote';
 
 export default function Home() {
-  const [note, setNote] = useState(""); // the note contents for CreateNote
+  // the note for CreateNote
+  const [note, setNote] = useState({ title: '', content: '', tag: 0 });
 
   // the question states for the ask gemini part
   const [question, setQuestion] = useState('');
