@@ -2,13 +2,18 @@ import { useState, useEffect } from 'react';
 
 export default function CreateNote({ note, setNote }) {
   const [notes, setNotes] = useState([]);
-  const [newNote, setNewNote] = useState(note);
+  const [newNote, setNewNote] = useState({ title: '', content: '', tag: 0 }); 
   const [tagInput, setTagInput] = useState(0);
 
-  // on file update change note to reflect results
   useEffect(() => {
-    setNewNote(note);
-    setNotes([...notes, note]);
+    // only update if there is actually new content
+    if (note.content !== newNote.content) {
+      setNewNote(prevNote => ({
+        ...prevNote,            // retain old properties of note (like id)
+        content: note.content,  // update the text
+        title: note.title,      // update the title
+      }));
+    }
   }, [note]);
 
   const handleCreateNote = async () => {
@@ -24,9 +29,9 @@ export default function CreateNote({ note, setNote }) {
         authorId: 1, 
       }),
     });
-    const createdNote = await response.json();
-    setNewNote(createdNote);
-    setNotes([...notes, createdNote]);
+    const note = await response.json();
+    setNewNote(note);
+    setNotes([...notes, note]);
   };
 
   const handleContentChange = (e) => {
@@ -38,19 +43,16 @@ export default function CreateNote({ note, setNote }) {
   };
 
   const handleTagChange = (e) => {
-    const tagValue = parseInt(e.target.value, 10) || 0;
+    const tagValue = parseInt(e.target.value, 10) || 0; 
     setNewNote({ ...newNote, tag: tagValue });
     setTagInput(tagValue);
   };
 
   const saveNote = async () => {
     if (!newNote || !newNote.id) {
-      alert('something wrong :(');
-      alert('new note is:' + newNote);
-      alert('id is:' + newNote.id);
-      return;
-    }
-    const response = await fetch('/api/notes/update', {
+ 	return;
+  }
+   const response = await fetch('/api/notes/update', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -73,7 +75,6 @@ export default function CreateNote({ note, setNote }) {
       alert('Failed to save the note.');
     }
   };
-
 
   return (
     <div>
@@ -116,3 +117,4 @@ export default function CreateNote({ note, setNote }) {
     </div>
   );
 }
+

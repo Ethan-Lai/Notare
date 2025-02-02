@@ -15,7 +15,6 @@ export default function Home() {
   // function for handling uploads of notes
   const handleUploadNote = async (fileContent, title, tag, file) => {
     const newNote = { title, content: fileContent, tag };
-
     setNote(newNote); // update the contents of the note
 
     try {
