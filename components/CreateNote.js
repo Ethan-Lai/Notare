@@ -8,6 +8,7 @@ export default function CreateNote({ note, setNote }) {
   // on file update change note to reflect results
   useEffect(() => {
     setNewNote(note);
+    setNotes([...notes, note]);
   }, [note]);
 
   const handleCreateNote = async () => {
@@ -43,7 +44,12 @@ export default function CreateNote({ note, setNote }) {
   };
 
   const saveNote = async () => {
-    if (!newNote || !newNote.id) return;
+    if (!newNote || !newNote.id) {
+      alert('something wrong :(');
+      alert('new note is:' + newNote);
+      alert('id is:' + newNote.id);
+      return;
+    }
     const response = await fetch('/api/notes/update', {
       method: 'PUT',
       headers: {
