@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function UploadNote() {
+export default function UploadNote({ onFileUpload }) {
   const [file, setFile] = useState(null);
   const [title, setTitle] = useState('');
   const [tag, setTag] = useState(0);
@@ -13,9 +13,12 @@ export default function UploadNote() {
     if (!file) {
         return;
     }
-    
+
     const fileContent = await file.text();
 
+    // after uploading the file, change the text and send the ai request
+    onFileUpload(fileContent, title || file.name, tag, file);
+    
     const response = await fetch('/api/notes/create', {
       method: 'POST',
       headers: {
@@ -55,28 +58,23 @@ export default function UploadNote() {
       <h2>Upload Note from File</h2>
       <div>
         <input
-            type="text"
-            value={title}
-            onChange={handleTitleChange}
-            placeholder="Enter note title"
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Enter note title"
         />
         <input
-            type="number"
-            value={tag}
-            onChange={(e) => setTag(parseInt(e.target.value, 10) || 0)}
-            placeholder="Enter tag (number)"
+          type="number"
+          value={tag}
+          onChange={(e) => setTag(parseInt(e.target.value, 10) || 0)}
+          placeholder="Enter tag (number)"
         />
         <input
-            type="file"
-            accept=".txt"
-            onChange={handleFileChange}
+          type="file"
+          accept=".txt,.pdf,.png,.jpg,.jpeg"
+          onChange={handleFileChange}
         />
-        <button 
-            onClick={handleUpload}
-            disabled={!file}
-        >
-            Upload Note
-        </button>
+        <button onClick={handleUpload}>Upload Note</button>
       </div>
     </div>
   );

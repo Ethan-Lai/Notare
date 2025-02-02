@@ -1,9 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-export default function CreateNote() {
+export default function CreateNote({ note, setNote }) {
   const [notes, setNotes] = useState([]);
-  const [newNote, setNewNote] = useState({ title: '', content: '', tag: 0 }); 
+  const [newNote, setNewNote] = useState(note);
   const [tagInput, setTagInput] = useState(0);
+
+  // on file update change note to reflect results
+  useEffect(() => {
+    setNewNote(note);
+  }, [note]);
 
   const handleCreateNote = async () => {
     const response = await fetch('/api/notes/create', {
@@ -18,9 +23,9 @@ export default function CreateNote() {
         authorId: 1, 
       }),
     });
-    const note = await response.json();
-    setNewNote(note);
-    setNotes([...notes, note]);
+    const createdNote = await response.json();
+    setNewNote(createdNote);
+    setNotes([...notes, createdNote]);
   };
 
   const handleContentChange = (e) => {
@@ -32,7 +37,7 @@ export default function CreateNote() {
   };
 
   const handleTagChange = (e) => {
-    const tagValue = parseInt(e.target.value, 10) || 0; 
+    const tagValue = parseInt(e.target.value, 10) || 0;
     setNewNote({ ...newNote, tag: tagValue });
     setTagInput(tagValue);
   };
@@ -62,6 +67,7 @@ export default function CreateNote() {
       alert('Failed to save the note.');
     }
   };
+
 
   return (
     <div>
@@ -104,4 +110,3 @@ export default function CreateNote() {
     </div>
   );
 }
-
