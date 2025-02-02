@@ -6,6 +6,15 @@ export default function CreateNote() {
   const [tagInput, setTagInput] = useState(0);
 
   const handleCreateNote = async () => {
+    const userId = localStorage.getItem('userId');
+    console.log('Retrieved userId from localStorage:', userId);
+  
+    if (!userId) {
+      alert('Please log in to create notes');
+      router.push('/login');  // Redirect to login if no user ID
+      return;
+    }
+  
     const response = await fetch('/api/notes/create', {
       method: 'POST',
       headers: {
@@ -14,13 +23,20 @@ export default function CreateNote() {
       body: JSON.stringify({
         title: '',
         content: '',
-        tag: 0, // Default tag
-        authorId: 1, 
+        tag: 0, // Default Tag
+        authorId: parseInt(userId, 10),
       }),
     });
-    const note = await response.json();
-    setNewNote(note);
-    setNotes([...notes, note]);
+  
+    if (response.ok) {
+      const note = await response.json();
+      console.log('Created note with authorId:', userId);
+      setNewNote(note);
+      setNotes([...notes, note]);
+    } else {
+      console.error('Failed to create note. Status:', response.status);
+      alert('Failed to create note. Please try again.');
+    }
   };
 
   const handleContentChange = (e) => {
