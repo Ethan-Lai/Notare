@@ -1,9 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import {useRouter} from "next/router";
 
-export default function CreateNote() {
+export default function CreateNote({ note, setNote }) {
+  const router = useRouter();
+
   const [notes, setNotes] = useState([]);
   const [newNote, setNewNote] = useState({ title: '', content: '', tag: 0 }); 
   const [tagInput, setTagInput] = useState(0);
+
+  useEffect(() => {
+    // only update if there is actually new content
+    if (note.content !== newNote.content) {
+      setNewNote(prevNote => ({
+        ...prevNote,            // retain old properties of note (like id)
+        content: note.content,  // update the text
+        title: note.title,      // update the title
+      }));
+    }
+  }, [note]);
 
   const handleCreateNote = async () => {
     const userId = localStorage.getItem('userId');
@@ -54,8 +68,10 @@ export default function CreateNote() {
   };
 
   const saveNote = async () => {
-    if (!newNote || !newNote.id) return;
-    const response = await fetch('/api/notes/update', {
+    if (!newNote || !newNote.id) {
+ 	return;
+  }
+   const response = await fetch('/api/notes/update', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
