@@ -58,7 +58,7 @@ export default function Home() {
             <h1>Notes App</h1>
 
             <div style={{ flex: '1' }}>
-                <CreateNote />
+                <CreateNote note={note} setNote={setNote} />
             </div>
 
             <div style={{ flex: '1' }}>

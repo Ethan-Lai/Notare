@@ -1,6 +1,9 @@
 import { useState } from 'react';
+import {useRouter} from "next/router";
 
 export default function UploadNote({ onFileUpload }) {
+    const router = useRouter();
+
     const [file, setFile] = useState(null);
     const [title, setTitle] = useState('');
     const [tag, setTag] = useState(0);
@@ -52,15 +55,6 @@ export default function UploadNote({ onFileUpload }) {
         }
     };
 
-    const handleTitleChange = (e) => {
-        setTitle(e.target.value);
-    };
-
-    const handleTagChange = (e) => {
-        const tagValue = parseInt(e.target.value, 10) || 0;
-        setTag(tagValue);
-    };
-
     return (
         <div>
             <h2>Upload Note from File</h2>
@@ -83,10 +77,6 @@ export default function UploadNote({ onFileUpload }) {
                     onChange={handleFileChange}
                 />
                 <button onClick={handleUpload}>Upload Note</button>
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Enter note title"
             </div>
         </div>
     );

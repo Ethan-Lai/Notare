@@ -1,6 +1,9 @@
-import { useState, useEffect } from 'react'; 
+import { useState, useEffect } from 'react';
+import {useRouter} from "next/router";
 
 export default function CreateNote({ note, setNote }) {
+  const router = useRouter();
+
   const [notes, setNotes] = useState([]);
   const [newNote, setNewNote] = useState({ title: '', content: '', tag: 0 }); 
   const [tagInput, setTagInput] = useState(0);
