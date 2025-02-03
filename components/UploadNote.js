@@ -11,33 +11,41 @@ export default function UploadNote() {
 
   const handleUpload = async () => {
     if (!file) {
-        return;
+      return;
+    }
+  
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      alert('Please log in to upload notes');
+      router.push('/login');  // Redirect to login if no user ID
+      return;
     }
     
     const fileContent = await file.text();
-
+  
     const response = await fetch('/api/notes/create', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        title: title || file.name, // Use filename if no title given
+        title: title || file.name,
         content: fileContent,
         tag: tag,
-        authorId: 1,
+        authorId: parseInt(userId, 10),
       }),
     });
-
+  
     if (response.ok) {
       const note = await response.json();
+      console.log('Uploaded note with authorId:', userId);
       alert('Note uploaded successfully!');
-      // Clear form
       setFile(null);
       setTitle('');
       setTag(0);
     } else {
-      alert('Failed to upload note.');
+      console.error('Failed to upload note. Status:', response.status);
+      alert('Failed to upload note. Please try again.');
     }
   };
 
