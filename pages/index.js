@@ -1,8 +1,14 @@
+import "@mantine/core/styles.css";
 import { useState } from 'react';
 import CreateNote from '../components/CreateNote';
 import AskGemini from '../components/AskGemini';
 import UploadNote from '../components/UploadNote';
 import { useRouter } from 'next/router';
+import {
+    AppShell,
+    AppShellMain,
+} from "@mantine/core";
+import Header from "../components/layout/Header";
 
 export default function Home() {
     const router = useRouter();
@@ -54,29 +60,37 @@ export default function Home() {
     };
 
     return (
-        <div style={{ display: 'flex', gap: '2rem', padding: '2rem' }}>
-            <h1>Notes App</h1>
+        <AppShell
+            header={{ height: 70 }}
+            padding="md"
+        >
+            <Header/>
+            <AppShellMain>
+                <div style={{ display: 'flex', gap: '2rem', padding: '2rem' }}>
+                    <h1>Notes App</h1>
 
-            <div style={{ flex: '1' }}>
-                <CreateNote note={note} setNote={setNote} />
-            </div>
+                    <div style={{ flex: '1' }}>
+                        <CreateNote note={note} setNote={setNote} />
+                    </div>
 
-            <div style={{ flex: '1' }}>
-                <h2>Ask Gemini</h2>
-                <AskGemini
-                    question={question}
-                    setQuestion={setQuestion}
-                    prev_question={prev_question}
-                    prev_response={prev_response}
-                    setPrevQuestion={setPrevQuestion}
-                    setPrevResponse={setPrevResponse}
-                />
-            </div>
+                    <div style={{ flex: '1' }}>
+                        <h2>Ask Gemini</h2>
+                        <AskGemini
+                            question={question}
+                            setQuestion={setQuestion}
+                            prev_question={prev_question}
+                            prev_response={prev_response}
+                            setPrevQuestion={setPrevQuestion}
+                            setPrevResponse={setPrevResponse}
+                        />
+                    </div>
 
-      <UploadNote onFileUpload={handleUploadNote} />
-      <button onClick={handleLogout}>
-            Logout
-      </button>
-    </div>
+                    <UploadNote onFileUpload={handleUploadNote} />
+                    <button onClick={handleLogout}>
+                        Logout
+                    </button>
+                </div>
+            </AppShellMain>
+        </AppShell>
   );
 }
