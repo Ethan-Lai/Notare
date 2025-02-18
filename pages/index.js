@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import CreateNote from '../components/CreateNote';
-import AskGemini2 from '../components/AskGemini2';
 import UploadNote from '../components/UploadNote';
 import { useRouter } from 'next/router';
 import {
@@ -15,11 +14,6 @@ export default function Home() {
 
     // the note for CreateNote
     const [note, setNote] = useState({ title: '', content: '', tag: 0 });
-
-    // the question states for the ask gemini part
-    const [question, setQuestion] = useState('');
-    const [prev_question, setPrevQuestion] = useState([]);
-    const [prev_response, setPrevResponse] = useState([]);
 
     // function for handling uploads of notes
     const handleUploadNote = async (fileContent, title, tag, file) => {
@@ -74,18 +68,6 @@ export default function Home() {
 
                     <div style={{ flex: '1' }}>
                         <CreateNote note={note} setNote={setNote} />
-                    </div>
-
-                    <div style={{ flex: '1' }}>
-                        <h2>Ask Gemini</h2>
-                        <AskGemini2
-                            question={question}
-                            setQuestion={setQuestion}
-                            prev_question={prev_question}
-                            prev_response={prev_response}
-                            setPrevQuestion={setPrevQuestion}
-                            setPrevResponse={setPrevResponse}
-                        />
                     </div>
 
                     <UploadNote onFileUpload={handleUploadNote} />
