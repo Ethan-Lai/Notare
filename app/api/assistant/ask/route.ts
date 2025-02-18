@@ -2,12 +2,25 @@ import { getAIService } from '@/services/ai/AIServiceFactory';
 import { IAIService } from '@/services/ai/IAIService';
 import {NextResponse} from "next/server";
 
+interface ReqBody {
+    question: string;
+    context?: string;
+}
+
 /**
  * Handler for API route to ask the AI a general question without any context.
  */
 export async function POST(req: Request) {
-    const body = await req.json();
-    const { question } = body;
+    // Verify JSON body is provided
+    let body: ReqBody;
+    try {
+        body = await req.json();
+    } catch (err) {
+        return NextResponse.json({ message: "Invalid JSON payload." }, { status: 400 });
+    }
+
+    // Verify question is provided
+    const { question, context } = body;
     if (!question) {
         return NextResponse.json({ message: "A question must be provided" }, { status: 400 });
     }
@@ -15,7 +28,7 @@ export async function POST(req: Request) {
     // Send question to AI service
     const service: IAIService = getAIService();
     try {
-        const response = await service.ask(question);
+        const response = await service.ask(question, context);
         return NextResponse.json({ message: response }, { status: 200 });
     } catch (err) {
         console.error(err);

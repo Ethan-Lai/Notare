@@ -9,8 +9,13 @@ export class GeminiService implements IAIService {
         this.model = genAI.getGenerativeModel({ model });
     }
 
-    async ask(question: string): Promise<string> {
-        const prompt = `Format the response as human-readable HTML-safe content, without unnecessary characters like stars or double quotes. My question is: ${question}`
+    async ask(question: string, context?: string): Promise<string> {
+        let prompt = `Format the response as human-readable HTML-safe content, without unnecessary characters like stars or double quotes. My question is: ${question}`
+        // If context is provided, add it to the end of the prompt
+        if (context) {
+            prompt += `\n Context: ${context}`;
+        }
+
         const result = await this.model.generateContent(prompt);
         return result.response.text();
     }
