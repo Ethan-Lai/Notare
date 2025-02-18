@@ -1,11 +1,13 @@
 import "@/styles/globals.css";
 import "@mantine/core/styles.css";
+import '@mantine/notifications/styles.css';
 import type { AppProps } from "next/app";
-import {createTheme, MantineProvider} from "@mantine/core";
+import {createTheme, MantineProvider, virtualColor} from "@mantine/core";
 import Head from "next/head";
+import {Notifications} from "@mantine/notifications";
 
 const theme = createTheme({
-    // TODO: Set up theme here
+    primaryColor: "blue",
 });
 
 export default function App({ Component, pageProps }: AppProps) {
@@ -19,6 +21,7 @@ export default function App({ Component, pageProps }: AppProps) {
                 />
                 <link rel="shortcut icon" href="/favicon.ico" />
             </Head>
+            <Notifications autoClose={1000} />
             <Component {...pageProps} />
         </MantineProvider>
     );

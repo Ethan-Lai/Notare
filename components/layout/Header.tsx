@@ -11,7 +11,7 @@ export default function Header() {
     return (
         <AppShellHeader p="sm">
             <Flex justify="space-between" align="center">
-                <Title>Notare</Title>
+                <Title pl="1rem" >Notare</Title>
                 <ActionIcon
                     variant="outline"
                     color={dark ? 'yellow' : 'blue'}

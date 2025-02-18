@@ -1,7 +1,6 @@
-import "@mantine/core/styles.css";
 import { useState } from 'react';
 import CreateNote from '../components/CreateNote';
-import AskGemini from '../components/AskGemini';
+import AskGemini2 from '../components/AskGemini2';
 import UploadNote from '../components/UploadNote';
 import { useRouter } from 'next/router';
 import {
@@ -9,6 +8,7 @@ import {
     AppShellMain,
 } from "@mantine/core";
 import Header from "../components/layout/Header";
+import Aside from "../components/layout/Aside";
 
 export default function Home() {
     const router = useRouter();
@@ -62,9 +62,12 @@ export default function Home() {
     return (
         <AppShell
             header={{ height: 70 }}
+            aside={{ width: "25%" }}
             padding="md"
         >
             <Header/>
+            <Aside/>
+
             <AppShellMain>
                 <div style={{ display: 'flex', gap: '2rem', padding: '2rem' }}>
                     <h1>Notes App</h1>
@@ -75,7 +78,7 @@ export default function Home() {
 
                     <div style={{ flex: '1' }}>
                         <h2>Ask Gemini</h2>
-                        <AskGemini
+                        <AskGemini2
                             question={question}
                             setQuestion={setQuestion}
                             prev_question={prev_question}

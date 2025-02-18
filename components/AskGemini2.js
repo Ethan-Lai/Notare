@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function AskGemini({
+export default function AskGemini2({
   question,
   setQuestion,
   prev_question,
