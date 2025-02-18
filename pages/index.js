@@ -1,19 +1,19 @@
 import { useState } from 'react';
 import CreateNote from '../components/CreateNote';
-import AskGemini from '../components/AskGemini';
 import UploadNote from '../components/UploadNote';
 import { useRouter } from 'next/router';
+import {
+    AppShell,
+    AppShellMain,
+} from "@mantine/core";
+import Header from "../components/layout/Header";
+import Aside from "../components/layout/Aside";
 
 export default function Home() {
     const router = useRouter();
 
     // the note for CreateNote
     const [note, setNote] = useState({ title: '', content: '', tag: 0 });
-
-    // the question states for the ask gemini part
-    const [question, setQuestion] = useState('');
-    const [prev_question, setPrevQuestion] = useState([]);
-    const [prev_response, setPrevResponse] = useState([]);
 
     // function for handling uploads of notes
     const handleUploadNote = async (fileContent, title, tag, file) => {
@@ -54,29 +54,28 @@ export default function Home() {
     };
 
     return (
-        <div style={{ display: 'flex', gap: '2rem', padding: '2rem' }}>
-            <h1>Notes App</h1>
+        <AppShell
+            header={{ height: 70 }}
+            aside={{ width: "25%" }}
+            padding="md"
+        >
+            <Header/>
+            <Aside/>
 
-            <div style={{ flex: '1' }}>
-                <CreateNote note={note} setNote={setNote} />
-            </div>
+            <AppShellMain>
+                <div style={{ display: 'flex', gap: '2rem', padding: '2rem' }}>
+                    <h1>Notes App</h1>
 
-            <div style={{ flex: '1' }}>
-                <h2>Ask Gemini</h2>
-                <AskGemini
-                    question={question}
-                    setQuestion={setQuestion}
-                    prev_question={prev_question}
-                    prev_response={prev_response}
-                    setPrevQuestion={setPrevQuestion}
-                    setPrevResponse={setPrevResponse}
-                />
-            </div>
+                    <div style={{ flex: '1' }}>
+                        <CreateNote note={note} setNote={setNote} />
+                    </div>
 
-      <UploadNote onFileUpload={handleUploadNote} />
-      <button onClick={handleLogout}>
-            Logout
-      </button>
-    </div>
+                    <UploadNote onFileUpload={handleUploadNote} />
+                    <button onClick={handleLogout}>
+                        Logout
+                    </button>
+                </div>
+            </AppShellMain>
+        </AppShell>
   );
 }
