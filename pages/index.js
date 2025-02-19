@@ -15,11 +15,11 @@ export default function Home() {
     // the note for CreateNote
     const [note, setNote] = useState({ title: '', content: '', tag: 0 });
 
-    // State to hold all notes
+    // state to hold all notes
     const [notes, setNotes] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // Fetch all notes on page load
+    // fetch all notes on page load
     useEffect(() => {
         const fetchNotes = async () => {
             try {
@@ -36,7 +36,7 @@ export default function Home() {
         fetchNotes();
     }, []);
 
-    // Group notes by authorId
+    // group notes by authorId
     const notesByAuthor = notes.reduce((acc, note) => {
         if (!acc[note.authorId]) {
             acc[note.authorId] = {
@@ -102,7 +102,7 @@ export default function Home() {
                     <div style={{ flex: '1' }}>
                         <CreateNote note={note} setNote={setNote} />
 
-                        {/* Display All Notes Below Create Notes */}
+                        // DISPAY ALL NOTES (WHOEVER IS DOING TICKET 26 LOOK HERE)
                         <div style={{ marginTop: '2rem' }}>
                             <h2>All Notes</h2>
                             {loading ? (
