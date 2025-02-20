@@ -2,13 +2,11 @@
 
 set -e
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    echo "🔹 Detected Linux..."
     sudo apt update
     sudo apt install -y postgresql postgresql-contrib nodejs npm
     POSTGRES_START_CMD="sudo service postgresql start"
     PSQL_CMD="sudo -u postgres psql"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-    echo "🔹 Detected macOS..."
     brew update
     brew install postgresql node
     POSTGRES_START_CMD="brew services start postgresql"
