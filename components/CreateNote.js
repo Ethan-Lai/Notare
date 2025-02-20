@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import {useRouter} from "next/router";
+import { useNotes } from '../context/NotesContext';
 
 export default function CreateNote({ note, setNote }) {
   const router = useRouter();
 
-  const [notes, setNotes] = useState([]);
+  const { createNote, updateNote } = useNotes()
   const [newNote, setNewNote] = useState({ title: '', content: '', tag: 0 }); 
   const [tagInput, setTagInput] = useState(0);
 
@@ -28,27 +29,17 @@ export default function CreateNote({ note, setNote }) {
       router.push('/login');  // Redirect to login if no user ID
       return;
     }
-  
-    const response = await fetch('/api/notes/create', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+
+    try {
+      const createdNote = await createNote({
         title: '',
         content: '',
-        tag: 0, // Default Tag
+        tag: tagInput,
         authorId: parseInt(userId, 10),
-      }),
-    });
-  
-    if (response.ok) {
-      const note = await response.json();
-      console.log('Created note with authorId:', userId);
-      setNewNote(note);
-      setNotes([...notes, note]);
-    } else {
-      console.error('Failed to create note. Status:', response.status);
+      });
+      setNewNote(createdNote);
+    } catch (error) {
+      console.error('Failed to create note:', error);
       alert('Failed to create note. Please try again.');
     }
   };
@@ -69,28 +60,18 @@ export default function CreateNote({ note, setNote }) {
 
   const saveNote = async () => {
     if (!newNote || !newNote.id) {
- 	return;
-  }
-   const response = await fetch('/api/notes/update', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+      return;
+    }
+
+    try {
+      await updateNote({
         id: newNote.id,
         title: newNote.title,
         content: newNote.content,
         tag: newNote.tag,
-      }),
-    });
-
-    if (response.ok) {
-      const updatedNote = await response.json();
-      setNotes((prevNotes) =>
-        prevNotes.map((note) => (note.id === updatedNote.id ? updatedNote : note))
-      );
+      });
       alert('Note saved successfully!');
-    } else {
+    } catch {
       alert('Failed to save the note.');
     }
   };
@@ -123,16 +104,6 @@ export default function CreateNote({ note, setNote }) {
           <button onClick={saveNote}>Save Note</button>
         </div>
       )}
-      <div>
-        <h2>All Notes</h2>
-        {notes.map((note) => (
-          <div key={note.id}>
-            <h3>{note.title}</h3>
-            <p>{note.content}</p>
-            <p>Tag: {note.tag}</p>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
