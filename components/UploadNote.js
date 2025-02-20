@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import {useRouter} from "next/router";
+import { useNotes } from '../context/NotesContext'
 
 export default function UploadNote({ onFileUpload }) {
     const router = useRouter();
+    const { createNote } = useNotes();
 
     const [file, setFile] = useState(null);
     const [title, setTitle] = useState('');
@@ -29,28 +31,21 @@ export default function UploadNote({ onFileUpload }) {
         // after uploading the file, change the text and send the ai request
         onFileUpload(fileContent, title || file.name, tag, file);
 
-        const response = await fetch('/api/notes/create', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                title: title || file.name,
-                content: fileContent,
-                tag: tag,
-                authorId: parseInt(userId, 10),
-            }),
-        });
+        try {
+            const note = await createNote({
+              title: title,
+              content: fileContent,
+              tag: tag,
+              authorId: parseInt(userId, 10),
+            });
 
-        if (response.ok) {
-            const note = await response.json();
             alert('Note uploaded successfully!');
             // Clear form
             setFile(null);
             setTitle('');
             setTag(0);
-        } else {
-            console.error('Failed to upload note. Status:', response.status);
+        } catch (error) {
+            console.error('Failed to upload note:', error);
             alert('Failed to upload note. Please try again.');
         }
     };

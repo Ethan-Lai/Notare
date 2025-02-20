@@ -8,45 +8,16 @@ import {
 } from "@mantine/core";
 import Header from "../components/layout/Header";
 import Aside from "../components/layout/Aside";
+import Sidebar from '../components/Sidebar';
 
 export default function Home() {
     const router = useRouter();
 
+    const [prev_question, setPrevQuestion] = useState([]);
+    const [prev_response, setPrevResponse] = useState([]);
+
     // the note for CreateNote
     const [note, setNote] = useState({ title: '', content: '', tag: 0 });
-
-    // state to hold all notes
-    const [notes, setNotes] = useState([]);
-    const [loading, setLoading] = useState(true);
-
-    // fetch all notes on page load
-    useEffect(() => {
-        const fetchNotes = async () => {
-            try {
-                const response = await fetch('/api/notes/getAll');
-                const data = await response.json();
-                setNotes(data);
-            } catch (error) {
-                console.error('Error fetching notes:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchNotes();
-    }, []);
-
-    // group notes by authorId
-    const notesByAuthor = notes.reduce((acc, note) => {
-        if (!acc[note.authorId]) {
-            acc[note.authorId] = {
-                author: note.author,
-                notes: [],
-            };
-        }
-        acc[note.authorId].notes.push(note);
-        return acc;
-    }, {});
 
     // function for handling uploads of notes
     const handleUploadNote = async (fileContent, title, tag, file) => {
@@ -81,53 +52,25 @@ export default function Home() {
         }
     };
 
-    const handleLogout = () => {
-        localStorage.removeItem('userId');
-        router.push('/login');
-    };
-
     return (
         <AppShell
             header={{ height: 70 }}
             aside={{ width: "25%" }}
+            navbar={{ width: "15%" }}
             padding="md"
         >
             <Header/>
             <Aside/>
+            <Sidebar/>
 
             <AppShellMain>
                 <div style={{ display: 'flex', gap: '2rem', padding: '2rem' }}>
-                    <h1>Notes App</h1>
 
                     <div style={{ flex: '1' }}>
                         <CreateNote note={note} setNote={setNote} />
-
-                        // DISPAY ALL NOTES (WHOEVER IS DOING TICKET 26 LOOK HERE)
-                        <div style={{ marginTop: '2rem' }}>
-                            <h2>All Notes</h2>
-                            {loading ? (
-                                <p>Loading...</p>
-                            ) : (
-                                Object.keys(notesByAuthor).map((authorId) => (
-                                    <div key={authorId} style={{ border: '1px solid black', padding: '10px', marginBottom: '10px' }}>
-                                        <h3>Author: {notesByAuthor[authorId].author?.name || 'Unknown'} (ID: {authorId})</h3>
-                                        <ul>
-                                            {notesByAuthor[authorId].notes.map((note) => (
-                                                <li key={note.id}>
-                                                    <strong>{note.title}</strong> - {note.content} (Created: {new Date(note.createdAt).toLocaleString()})
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                ))
-                            )}
-                        </div>
                     </div>
 
                     <UploadNote onFileUpload={handleUploadNote} />
-                    <button onClick={handleLogout}>
-                        Logout
-                    </button>
                 </div>
             </AppShellMain>
         </AppShell>
