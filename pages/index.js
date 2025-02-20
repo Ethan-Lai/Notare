@@ -1,6 +1,4 @@
 import { useState, useEffect } from 'react';
-import CreateNote from '../components/CreateNote';
-import UploadNote from '../components/UploadNote';
 import { useRouter } from 'next/router';
 import {
     AppShell,
@@ -10,6 +8,9 @@ import Header from "../components/layout/Header";
 import Aside from "../components/layout/Aside";
 import {ActiveFileContext} from "../context/ActiveFileContext";
 import Sidebar from '../components/Sidebar';
+import NotesOverview from "../components/notes/NotesOverview";
+import CreateNote from "../components/CreateNote";
+import UploadNote from "../components/UploadNote";
 
 export default function Home() {
     const router = useRouter();
@@ -90,27 +91,30 @@ export default function Home() {
     };
 
     return (
-        <AppShell
-            header={{ height: 70 }}
-            aside={{ width: "25%" }}
-            navbar={{ width: "15%" }}
-            padding="md"
-        >
-            <Header/>
-            <Aside/>
-            <Sidebar/>
+       <ActiveFileContext.Provider value={{ activeFileContent, setActiveFileContent }}>
+           <AppShell
+               header={{ height: 70 }}
+               aside={{ width: "25%" }}
+               navbar={{ width: "15%" }}
+               padding="md"
+           >
+               <Header/>
+               <Aside/>
+               <Sidebar/>
 
-            <AppShellMain>
-                <div style={{ display: 'flex', gap: '2rem', padding: '2rem' }}>
+               <AppShellMain>
+                   <NotesOverview />
+                   {/*<div style={{ display: 'flex', gap: '2rem', padding: '2rem' }}>*/}
 
-                    <div style={{ flex: '1' }}>
-                        <CreateNote note={note} setNote={setNote} />
-                    </div>
+                   {/*    <div style={{ flex: '1' }}>*/}
+                   {/*        <CreateNote note={note} setNote={setNote} />*/}
+                   {/*    </div>*/}
 
-                    <UploadNote onFileUpload={handleUploadNote} />
-                </div>
-            </AppShellMain>
-        </AppShell>
+                   {/*    <UploadNote onFileUpload={handleUploadNote} />*/}
+                   {/*</div>*/}
+               </AppShellMain>
+           </AppShell>
+       </ActiveFileContext.Provider>
   );
 }
 
