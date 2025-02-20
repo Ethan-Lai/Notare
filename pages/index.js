@@ -8,16 +8,53 @@ import {
 } from "@mantine/core";
 import Header from "../components/layout/Header";
 import Aside from "../components/layout/Aside";
+import {ActiveFileContext} from "../context/ActiveFileContext";
 import Sidebar from '../components/Sidebar';
 
 export default function Home() {
     const router = useRouter();
+
+    // Active Note content
+    const [activeFileContent, setActiveFileContent] = useState("");
 
     const [prev_question, setPrevQuestion] = useState([]);
     const [prev_response, setPrevResponse] = useState([]);
 
     // the note for CreateNote
     const [note, setNote] = useState({ title: '', content: '', tag: 0 });
+
+    // state to hold all notes
+    const [notes, setNotes] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    // fetch all notes on page load
+    useEffect(() => {
+        const fetchNotes = async () => {
+            try {
+                const response = await fetch('/api/notes/getAll');
+                const data = await response.json();
+                setNotes(data);
+            } catch (error) {
+                console.error('Error fetching notes:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchNotes();
+    }, []);
+
+    // group notes by authorId
+    const notesByAuthor = notes.reduce((acc, note) => {
+        if (!acc[note.authorId]) {
+            acc[note.authorId] = {
+                author: note.author,
+                notes: [],
+            };
+        }
+        acc[note.authorId].notes.push(note);
+        return acc;
+    }, {});
 
     // function for handling uploads of notes
     const handleUploadNote = async (fileContent, title, tag, file) => {
