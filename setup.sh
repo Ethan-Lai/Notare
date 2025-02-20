@@ -1,24 +1,25 @@
 #!/bin/bash
 
-set -e  # Exit immediately if any command fails
-
+set -e
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    echo "🔹 Detected Linux..."
     sudo apt update
     sudo apt install -y postgresql postgresql-contrib nodejs npm
+    POSTGRES_START_CMD="sudo service postgresql start"
+    PSQL_CMD="sudo -u postgres psql"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
+    echo "🔹 Detected macOS..."
     brew update
     brew install postgresql node
+    POSTGRES_START_CMD="brew services start postgresql"
+    PSQL_CMD="sudo psql -U postgres"
 else
-    echo "add more or just leave it here, unsupported"
+    echo "currently unsupported OS: $OSTYPE"
     exit 1
 fi
-if pgrep -x "postgres" > /dev/null
-then
-    echo "postgreSQL is already running? did you think it wasn't?"
-else
-    sudo service postgresql start
-fi
-sudo -u postgres psql <<EOF
+$POSTGRES_START_CMD
+
+$PSQL_CMD <<EOF
 DO \$\$
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'postgres') THEN
