@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import CreateNote from '../components/CreateNote';
 import UploadNote from '../components/UploadNote';
 import { useRouter } from 'next/router';
@@ -14,6 +14,39 @@ export default function Home() {
 
     // the note for CreateNote
     const [note, setNote] = useState({ title: '', content: '', tag: 0 });
+
+    // state to hold all notes
+    const [notes, setNotes] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    // fetch all notes on page load
+    useEffect(() => {
+        const fetchNotes = async () => {
+            try {
+                const response = await fetch('/api/notes/getAll');
+                const data = await response.json();
+                setNotes(data);
+            } catch (error) {
+                console.error('Error fetching notes:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchNotes();
+    }, []);
+
+    // group notes by authorId
+    const notesByAuthor = notes.reduce((acc, note) => {
+        if (!acc[note.authorId]) {
+            acc[note.authorId] = {
+                author: note.author,
+                notes: [],
+            };
+        }
+        acc[note.authorId].notes.push(note);
+        return acc;
+    }, {});
 
     // function for handling uploads of notes
     const handleUploadNote = async (fileContent, title, tag, file) => {
@@ -68,6 +101,27 @@ export default function Home() {
 
                     <div style={{ flex: '1' }}>
                         <CreateNote note={note} setNote={setNote} />
+
+                        // DISPAY ALL NOTES (WHOEVER IS DOING TICKET 26 LOOK HERE)
+                        <div style={{ marginTop: '2rem' }}>
+                            <h2>All Notes</h2>
+                            {loading ? (
+                                <p>Loading...</p>
+                            ) : (
+                                Object.keys(notesByAuthor).map((authorId) => (
+                                    <div key={authorId} style={{ border: '1px solid black', padding: '10px', marginBottom: '10px' }}>
+                                        <h3>Author: {notesByAuthor[authorId].author?.name || 'Unknown'} (ID: {authorId})</h3>
+                                        <ul>
+                                            {notesByAuthor[authorId].notes.map((note) => (
+                                                <li key={note.id}>
+                                                    <strong>{note.title}</strong> - {note.content} (Created: {new Date(note.createdAt).toLocaleString()})
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                ))
+                            )}
+                        </div>
                     </div>
 
                     <UploadNote onFileUpload={handleUploadNote} />
@@ -79,3 +133,4 @@ export default function Home() {
         </AppShell>
   );
 }
+
