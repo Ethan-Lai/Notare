@@ -4,6 +4,7 @@ const NotesContext = createContext();
 
 export function NotesProvider({ children }) {
     const [notes, setNotes] = useState([]);
+    const [activeNote, setActiveNote] = useState(null);
 
     const fetchNotes = async () => {
         try {
@@ -32,7 +33,19 @@ export function NotesProvider({ children }) {
         throw new Error('Failed to create note');
     };
 
-    const updateNote = async (noteData) => {
+    // Declare one update function for automatic in-memory updates, and the other for persisting changes to DB
+    const updateNoteLocally = (noteData) => {
+        setNotes(prevNotes => notes.map((note) =>
+            note.id === noteData.id ? noteData : note
+        ));
+
+        if (activeNote && activeNote.id === noteData.id) {
+            setActiveNote(noteData);
+        }
+    }
+
+    /* Update note in DB - Call periodically to persist changes */
+    const updateNoteInDB = async (noteData) => {
         const response = await fetch('/api/notes/update', {
             method: 'PUT',
             headers: {
@@ -58,7 +71,7 @@ export function NotesProvider({ children }) {
     }, []);
 
     return (
-        <NotesContext.Provider value={{ notes, createNote, updateNote, fetchNotes }}>
+        <NotesContext.Provider value={{ notes, createNote, updateNoteLocally, updateNoteInDB, fetchNotes, activeNote, setActiveNote }}>
             {children}
         </NotesContext.Provider>
     );

@@ -9,7 +9,7 @@ import {
 } from "@mantine/core";
 import React, {FormEvent, useState} from "react";
 import {notifications} from "@mantine/notifications";
-import {useActiveFileContext} from "@/context/ActiveFileContext";
+import {useNotes} from "@/context/NotesContext";
 
 type HistoryEntry = {
     prompt: string;
@@ -22,14 +22,14 @@ export default function AskGemini() {
     const [history, setHistory] = useState<HistoryEntry[]>([]); // Contains only answered questions
 
     // Access active note (if existing) to provide as context
-    const { activeFileContent } = useActiveFileContext();
+    const { activeNote } = useNotes();
 
     const handleSubmit = async (e?: FormEvent) => {
         e?.preventDefault();
         setIsLoading(true);
 
         try {
-            const body = { question: question, context: activeFileContent };
+            const body = { question: question, context: activeNote.content };
             const res = await fetch('/api/assistant/ask', {
                 method: 'POST',
                 headers: {

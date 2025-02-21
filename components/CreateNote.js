@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react';
 import {useRouter} from "next/router";
-import {useActiveFileContext} from "../context/ActiveFileContext";
 import { useNotes } from '../context/NotesContext';
 
 export default function CreateNote({ note, setNote }) {
   const router = useRouter();
-  const { setActiveFileContent } = useActiveFileContext();
 
   const { createNote, updateNote } = useNotes()
   const [newNote, setNewNote] = useState({ title: '', content: '', tag: 0 }); 
@@ -48,7 +46,6 @@ export default function CreateNote({ note, setNote }) {
 
   const handleContentChange = (e) => {
     setNewNote({ ...newNote, content: e.target.value });
-    setActiveFileContent(e.target.value);
   };
 
   const handleTitleChange = (e) => {

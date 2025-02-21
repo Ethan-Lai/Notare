@@ -2,7 +2,6 @@ import {useEffect, useState} from "react";
 import {SimpleGrid, Skeleton, Stack, Text} from "@mantine/core";
 import NotePreview from "@/components/notes/NotePreview";
 import {notifications} from "@mantine/notifications";
-import {load} from "signal-exit";
 
 export default function NotesOverview() {
     const [loading, setLoading] = useState(true);
@@ -11,6 +10,7 @@ export default function NotesOverview() {
     // Sizing setup
     const height = 180;
 
+    // TODO: Remove this since NotesContext already fetches it?
     useEffect(() => {
         const fetchNotes = async () => {
             try {
@@ -47,7 +47,7 @@ export default function NotesOverview() {
                 }
 
                 {notes.map((note) => (
-                    <NotePreview note={note} height={height} />
+                    <NotePreview note={note} height={height} key={note.id} />
                 ))}
             </SimpleGrid>
 
@@ -57,18 +57,6 @@ export default function NotesOverview() {
                     No Notes Found.
                 </Text>
             )}
-
-            {/*{loading ? (*/}
-            {/*    <SimpleGrid cols={5}>*/}
-            {/*        /!*{Array(10)*!/*/}
-            {/*        /!*    .fill(0)*!/*/}
-            {/*        /!*    .map((_, index) => (*!/*/}
-            {/*        /!*        <Skeleton key={index} h={80} mt="sm" animate={true} />*!/*/}
-            {/*        /!*    ))}*!/*/}
-            {/*    </SimpleGrid>*/}
-            {/*) : (*/}
-            {/*    <h1>Empty</h1>*/}
-            {/*)}*/}
         </Stack>
     )
 }

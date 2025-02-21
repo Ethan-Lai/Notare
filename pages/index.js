@@ -6,17 +6,14 @@ import {
 } from "@mantine/core";
 import Header from "../components/layout/Header";
 import Aside from "../components/layout/Aside";
-import {ActiveFileContext} from "../context/ActiveFileContext";
 import Sidebar from '../components/Sidebar';
-import NotesOverview from "../components/notes/NotesOverview";
-import CreateNote from "../components/CreateNote";
-import UploadNote from "../components/UploadNote";
+import Home from "../components/Home";
 
-export default function Home() {
+export default function Home2() {
     const router = useRouter();
 
-    // Active Note content
-    const [activeFileContent, setActiveFileContent] = useState("");
+    // Track active note for display purposes
+    const [activeNote, setActiveNote] = useState(null);
 
     const [prev_question, setPrevQuestion] = useState([]);
     const [prev_response, setPrevResponse] = useState([]);
@@ -91,30 +88,28 @@ export default function Home() {
     };
 
     return (
-       <ActiveFileContext.Provider value={{ activeFileContent, setActiveFileContent }}>
-           <AppShell
-               header={{ height: 70 }}
-               aside={{ width: "25%" }}
-               navbar={{ width: "15%" }}
-               padding="md"
-           >
-               <Header/>
-               <Aside/>
-               <Sidebar/>
+        <AppShell
+            header={{ height: 70 }}
+            aside={{ width: "25%" }}
+            navbar={{ width: "15%" }}
+            padding="md"
+        >
+            <Header/>
+            <Aside/>
+            <Sidebar/>
 
-               <AppShellMain>
-                   <NotesOverview />
-                   {/*<div style={{ display: 'flex', gap: '2rem', padding: '2rem' }}>*/}
+            <AppShellMain>
+                <Home />
+                {/*<div style={{ display: 'flex', gap: '2rem', padding: '2rem' }}>*/}
 
-                   {/*    <div style={{ flex: '1' }}>*/}
-                   {/*        <CreateNote note={note} setNote={setNote} />*/}
-                   {/*    </div>*/}
+                {/*    <div style={{ flex: '1' }}>*/}
+                {/*        <CreateNote note={note} setNote={setNote} />*/}
+                {/*    </div>*/}
 
-                   {/*    <UploadNote onFileUpload={handleUploadNote} />*/}
-                   {/*</div>*/}
-               </AppShellMain>
-           </AppShell>
-       </ActiveFileContext.Provider>
+                {/*    <UploadNote onFileUpload={handleUploadNote} />*/}
+                {/*</div>*/}
+            </AppShellMain>
+        </AppShell>
   );
 }
 

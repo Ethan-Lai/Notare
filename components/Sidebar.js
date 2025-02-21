@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { AppShellNavbar, NavLink } from '@mantine/core';
+import {AppShellNavbar, Divider, NavLink} from '@mantine/core';
 import { useNotes } from '../context/NotesContext';
+import {IconHome2} from "@tabler/icons-react";
 
 export default function Sidebar() {
     const { notes } = useNotes();
     const [expandedTags, setExpandedTags] = useState({});
+    const { activeNote, setActiveNote } = useNotes();
 
     // Sort notes by tag 
     const notesByTag = Object.groupBy(notes, note => note.tag);
@@ -18,6 +20,15 @@ export default function Sidebar() {
 
     return (
         <AppShellNavbar p="md">
+            <NavLink
+                label="Home"
+                key={"Home"}
+                leftSection={<IconHome2 />}
+                onClick={() => setActiveNote(null)}
+                active={!activeNote}
+            />
+            <Divider mt="sm"/>
+
             {Object.entries(notesByTag).map(([tag, tagNotes]) => (
                 <NavLink
                     key={tag}
@@ -29,8 +40,10 @@ export default function Sidebar() {
                         <NavLink
                             key={note.id}
                             component="button"
-                            label={note.title}
+                            label={note.title ? note.title : "Untitled Note"}
                             variant="light"
+                            onClick={() => setActiveNote(note)}
+                            active={activeNote?.id === note.id}
                         />
                     ))}
                 </NavLink>
