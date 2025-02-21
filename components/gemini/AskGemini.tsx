@@ -9,6 +9,7 @@ import {
 } from "@mantine/core";
 import React, {FormEvent, useState} from "react";
 import {notifications} from "@mantine/notifications";
+import {useNotes} from "@/context/NotesContext";
 
 type HistoryEntry = {
     prompt: string;
@@ -20,17 +21,21 @@ export default function AskGemini() {
     const [isLoading, setIsLoading] = useState(false);
     const [history, setHistory] = useState<HistoryEntry[]>([]); // Contains only answered questions
 
+    // Access active note (if existing) to provide as context
+    const { activeNote } = useNotes();
+
     const handleSubmit = async (e?: FormEvent) => {
         e?.preventDefault();
         setIsLoading(true);
 
         try {
+            const body = { question: question, context: activeNote?.content };
             const res = await fetch('/api/assistant/ask', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ question: question })
+                body: JSON.stringify(body)
             });
             if (!res.ok) {
                 throw new Error(`Invalid response code: ${res.status}`);

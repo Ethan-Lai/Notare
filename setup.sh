@@ -30,7 +30,7 @@ CREATE DATABASE notesdb OWNER postgres;
 EOF
 cd "$(dirname "$0")"
 cat > .env <<EOF
-DATABASE_URL="postgresql://postgres:newpassword@localhost:5432/notesdb?schema=public"
+DATABASE_URL="postgresql://postgres:momongausagi@localhost:5432/notesdb?schema=public"
 EOF
 npm install
 npx prisma generate
