@@ -9,9 +9,11 @@ import {
 import Header from "../components/layout/Header";
 import Aside from "../components/layout/Aside";
 import Sidebar from '../components/Sidebar';
+import { useDisclosure } from '@mantine/hooks';
 
 export default function Home() {
     const router = useRouter();
+    const [opened, { toggle }] = useDisclosure();
 
     const [prev_question, setPrevQuestion] = useState([]);
     const [prev_response, setPrevResponse] = useState([]);
@@ -56,12 +58,16 @@ export default function Home() {
         <AppShell
             header={{ height: 70 }}
             aside={{ width: "25%" }}
-            navbar={{ width: "15%" }}
+            navbar={{ 
+                width: "15%",
+                collapsed: { desktop: !opened },
+                breakpoint: "sm"
+            }}
             padding="md"
         >
-            <Header/>
+            <Header opened={opened} toggle={toggle}/>
             <Aside/>
-            <Sidebar/>
+            <Sidebar opened={opened}/>
 
             <AppShellMain>
                 <div style={{ display: 'flex', gap: '2rem', padding: '2rem' }}>
