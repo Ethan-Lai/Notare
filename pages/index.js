@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
+import { useState } from 'react';
 import {
     AppShell,
     AppShellMain,
@@ -9,52 +8,11 @@ import Aside from "../components/layout/Aside";
 import Sidebar from '../components/Sidebar';
 import Home from "../components/Home";
 
-export default function Home2() {
-    const router = useRouter();
-
-    // Track active note for display purposes
-    const [activeNote, setActiveNote] = useState(null);
-
+export default function Index() {
     const [prev_question, setPrevQuestion] = useState([]);
     const [prev_response, setPrevResponse] = useState([]);
 
-    // the note for CreateNote
-    const [note, setNote] = useState({ title: '', content: '', tag: 0 });
-
-    // state to hold all notes
-    const [notes, setNotes] = useState([]);
-    const [loading, setLoading] = useState(true);
-
-    // fetch all notes on page load
-    useEffect(() => {
-        const fetchNotes = async () => {
-            try {
-                const response = await fetch('/api/notes/getAll');
-                const data = await response.json();
-                setNotes(data);
-            } catch (error) {
-                console.error('Error fetching notes:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchNotes();
-    }, []);
-
-    // group notes by authorId
-    const notesByAuthor = notes.reduce((acc, note) => {
-        if (!acc[note.authorId]) {
-            acc[note.authorId] = {
-                author: note.author,
-                notes: [],
-            };
-        }
-        acc[note.authorId].notes.push(note);
-        return acc;
-    }, {});
-
-    // function for handling uploads of notes
+    // TODO: Move to sidebar
     const handleUploadNote = async (fileContent, title, tag, file) => {
         const newNote = { title, content: fileContent, tag };
         setNote(newNote); // update the contents of the note (for the text)
@@ -100,14 +58,6 @@ export default function Home2() {
 
             <AppShellMain>
                 <Home />
-                {/*<div style={{ display: 'flex', gap: '2rem', padding: '2rem' }}>*/}
-
-                {/*    <div style={{ flex: '1' }}>*/}
-                {/*        <CreateNote note={note} setNote={setNote} />*/}
-                {/*    </div>*/}
-
-                {/*    <UploadNote onFileUpload={handleUploadNote} />*/}
-                {/*</div>*/}
             </AppShellMain>
         </AppShell>
   );

@@ -11,7 +11,10 @@ export default async function handler(req, res) {
             select: { id: true, name: true, email: true }, // fetch author details
           },
         },
-        orderBy: { authorId: 'asc' }, // order notes by authorId
+        orderBy: [
+          {authorId: 'asc' },
+          {createdAt: 'desc' }
+        ], // order notes by authorId
       });
 
       res.status(200).json(notes);

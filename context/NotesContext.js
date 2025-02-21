@@ -4,16 +4,19 @@ const NotesContext = createContext();
 
 export function NotesProvider({ children }) {
     const [notes, setNotes] = useState([]);
+    const [initialLoad, setInitialLoad] = useState(true);
     const [activeNote, setActiveNote] = useState(null);
 
     const fetchNotes = async () => {
         try {
             const response = await fetch('/api/notes/getAll');
             const data = await response.json();
+            await new Promise(resolve => setTimeout(resolve, 1500));
             setNotes(data);
         } catch (error) {
             console.error('Error fetching notes:', error);
         }
+        setInitialLoad(false)
     };
 
     const createNote = async (noteData) => {
@@ -27,7 +30,7 @@ export function NotesProvider({ children }) {
 
         if (response.ok) {
             const newNote = await response.json();
-            setNotes(prevNotes => [...prevNotes, newNote]);
+            setNotes(prevNotes => [ newNote, ...prevNotes]);
             return newNote;
         }
         throw new Error('Failed to create note');
@@ -68,10 +71,19 @@ export function NotesProvider({ children }) {
 
     useEffect(() => {
         fetchNotes();
-    }, []);
+    }, [])
 
     return (
-        <NotesContext.Provider value={{ notes, createNote, updateNoteLocally, updateNoteInDB, fetchNotes, activeNote, setActiveNote }}>
+        <NotesContext.Provider value={{
+            initialLoad,
+            notes,
+            createNote,
+            updateNoteLocally,
+            updateNoteInDB,
+            fetchNotes,
+            activeNote,
+            setActiveNote
+        }}>
             {children}
         </NotesContext.Provider>
     );

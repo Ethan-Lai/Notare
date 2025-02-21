@@ -15,7 +15,14 @@ export default function NotePreview(props: NotePreviewProps) {
     const timeString = getRelativeTimeString(new Date(note.createdAt), navigator.language);
 
     return (
-        <Card shadow="sm" padding="md" withBorder h={height} onClick={() => setActiveNote(note)}>
+        <Card
+            shadow="sm"
+            padding="md"
+            withBorder
+            h={height}
+            style={{ cursor: "pointer" }}
+            onClick={() => setActiveNote(note)}
+        >
             <Stack gap={4} flex={1}>
                 <Group justify="space-between">
                     <Text size="md" fw={700}>{note.title}</Text>

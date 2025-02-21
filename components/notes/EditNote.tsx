@@ -1,4 +1,4 @@
-import {Group, Stack, Text, Textarea, TextInput} from "@mantine/core";
+import {Group, NumberInput, Stack, Text, Textarea, TextInput} from "@mantine/core";
 import {useNotes} from "@/context/NotesContext";
 import {useDebouncedValue} from "@mantine/hooks";
 import {ChangeEvent, useEffect, useState} from "react";
@@ -50,14 +50,30 @@ export default function EditNote({ note }: EditNoteProps) {
         setHasEdited(true);
     }
 
+    const handleTagChange = (val: string | number) => {
+        const newTag = typeof val === "number" ? val : (parseInt(val) || 0);
+        updateNoteLocally({ ...note, tag: newTag });
+        setHasEdited(true);
+    }
+
     return (
         <Stack p="xl" gap={0}>
-            <Group justify="flex-end">
-                <Group gap="xs">
-                    <Group opacity={saving ? 1 : 0} style={{ transition: "opacity 0.2s" }}>
-                        <IconRefresh size={16} />
-                        <Text size="sm" c="dimmed">Saving...</Text>
-                    </Group>
+            <Group justify="space-between">
+                <NumberInput
+                    variant="filled"
+                    value={note.tag}
+                    onChange={handleTagChange}
+                    allowNegative={false}
+                    label="Tag"
+                    placeholder="Tag Number"
+                    allowDecimal={false}
+                    maw={200}
+                    size="xs"
+                />
+
+                <Group opacity={saving ? 1 : 0} style={{ transition: "opacity 0.2s" }}>
+                    <IconRefresh size={16} />
+                    <Text size="sm" c="dimmed">Saving...</Text>
                 </Group>
             </Group>
 

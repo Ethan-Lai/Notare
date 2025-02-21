@@ -4,7 +4,7 @@ import EditNote from "@/components/notes/EditNote";
 import {useNotes} from "@/context/NotesContext";
 
 export default function Home() {
-    const { activeNote, setActiveNote } = useNotes();
+    const { activeNote } = useNotes();
 
     return (
        <Box>
