@@ -1,8 +1,13 @@
-import {ActionIcon, AppShellHeader, Flex, Title, useMantineColorScheme} from "@mantine/core";
+import {ActionIcon, AppShellHeader, Burger, Flex, Title, useMantineColorScheme} from "@mantine/core";
 import {IconMoon, IconSun, IconLogout} from "@tabler/icons-react";
 import { useRouter } from 'next/router';
 
-export default function Header() {
+interface HeaderProps {
+    opened: boolean;
+    toggle: () => void;
+}
+
+export default function Header({ opened, toggle }: HeaderProps) {
     const router = useRouter();
     const { colorScheme, setColorScheme } = useMantineColorScheme();
     const dark = colorScheme === 'dark';
@@ -18,7 +23,10 @@ export default function Header() {
     return (
         <AppShellHeader p="sm">
             <Flex justify="space-between" align="center">
-                <Title pl="1rem" >Notare</Title>
+                <Flex gap="md" align="center">
+                    <Burger opened={opened} onClick={toggle} size="sm" />
+                    <Title pl="1rem" >Notare</Title>
+                </Flex>
                 <div className="flex items-center justify-center gap-4">
                     <ActionIcon
                         variant="outline"
