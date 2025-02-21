@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AppShellNavbar, NavLink } from '@mantine/core';
 import { useNotes } from '../context/NotesContext';
 
-export default function Sidebar({ opened }) {
+export default function Sidebar() {
     const { notes } = useNotes();
     const [expandedTags, setExpandedTags] = useState({});
 
@@ -15,10 +15,6 @@ export default function Sidebar({ opened }) {
             [tag]: !prev[tag]
         }));
     };
-
-    if (!opened) {
-        return null;
-    }
 
     return (
         <AppShellNavbar p="md">
