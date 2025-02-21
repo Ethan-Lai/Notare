@@ -29,7 +29,7 @@ export default function AskGemini() {
         setIsLoading(true);
 
         try {
-            const body = { question: question, context: activeNote.content };
+            const body = { question: question, context: activeNote?.content };
             const res = await fetch('/api/assistant/ask', {
                 method: 'POST',
                 headers: {

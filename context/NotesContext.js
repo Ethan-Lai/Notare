@@ -11,7 +11,6 @@ export function NotesProvider({ children }) {
         try {
             const response = await fetch('/api/notes/getAll');
             const data = await response.json();
-            await new Promise(resolve => setTimeout(resolve, 1500));
             setNotes(data);
         } catch (error) {
             console.error('Error fetching notes:', error);
