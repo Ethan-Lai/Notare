@@ -4,12 +4,12 @@ import { useNotes } from '../context/NotesContext';
 import {IconHome2, IconPlus} from "@tabler/icons-react";
 import {notifications} from "@mantine/notifications";
 
-export default function Sidebar() {
+export default function Sidebar({ opened }) {
     const [expandedTags, setExpandedTags] = useState({});
     const { notes, activeNote, createNote, setActiveNote, initialLoad } = useNotes();
 
     // Sort notes by tag 
-    const notesByTag = Object.groupBy(notes, note => note.tag);
+    const notesByTag = notes?.length > 0 ? Object.groupBy(notes, note => note.tag) : {};
 
     const toggleTag = (tag) => {
         setExpandedTags(prev => ({
@@ -45,6 +45,10 @@ export default function Sidebar() {
                 position: "top-center"
             })
         }
+    }
+
+    if (!opened) {
+        return null;
     }
 
     return (
