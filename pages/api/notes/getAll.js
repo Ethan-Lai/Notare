@@ -5,16 +5,16 @@ const prisma = new PrismaClient();
 export default async function handler(req, res) {
   if (req.method === 'GET') {
     try {
+      const { userId } = req.query;
+
+      if (!userId) {
+        return res.status(400).json({ error: 'Author ID is required' });
+      }
+
       const notes = await prisma.note.findMany({
-        include: {
-          author: {
-            select: { id: true, name: true, email: true }, // fetch author details
-          },
+        where: {
+          authorId: parseInt(userId)
         },
-        orderBy: [
-          {authorId: 'asc' },
-          {createdAt: 'desc' }
-        ], // order notes by authorId
       });
 
       res.status(200).json(notes);

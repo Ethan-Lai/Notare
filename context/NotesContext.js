@@ -9,13 +9,14 @@ export function NotesProvider({ children }) {
 
     const fetchNotes = async () => {
         try {
-            const response = await fetch('/api/notes/getAll');
+            const userId = localStorage.getItem('userId');
+            const response = await fetch(`/api/notes/getAll?userId=${userId}`);
             const data = await response.json();
             setNotes(data);
         } catch (error) {
             console.error('Error fetching notes:', error);
         }
-        setInitialLoad(false)
+        setInitialLoad(false);
     };
 
     const createNote = async (noteData) => {
@@ -68,9 +69,15 @@ export function NotesProvider({ children }) {
         throw new Error('Failed to update note');
     };
 
+    const resetContext = () => {
+        setNotes([]);
+        setActiveNote(null);
+        setInitialLoad(true);
+    };
+
     useEffect(() => {
-        fetchNotes();
-    }, [])
+        fetchNotes()
+    }, []);
 
     return (
         <NotesContext.Provider value={{
@@ -81,7 +88,8 @@ export function NotesProvider({ children }) {
             updateNoteInDB,
             fetchNotes,
             activeNote,
-            setActiveNote
+            setActiveNote,
+            resetContext
         }}>
             {children}
         </NotesContext.Provider>
