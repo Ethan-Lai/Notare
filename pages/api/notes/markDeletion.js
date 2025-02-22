@@ -29,7 +29,6 @@ export default async function handler(req, res) {
         where: { id: noteId },
         data: { canDelete: true },
       });
-console.log(updatedNote.isDeleted);
 
       res.status(200).json(updatedNote);
     } catch (error) {
