@@ -2,6 +2,7 @@ import {ActionIcon, AppShellHeader, Burger, Flex, Title, useMantineColorScheme} 
 import {IconMoon, IconSun, IconLogout} from "@tabler/icons-react";
 import { useRouter } from 'next/router';
 import { useEffect, useState } from "react";
+import { useNotes } from "@/context/NotesContext";
 
 interface HeaderProps {
     opened: boolean,
@@ -10,6 +11,7 @@ interface HeaderProps {
 
 export default function Header({ opened, toggle }: HeaderProps) {
     const router = useRouter();
+    const { resetContext } = useNotes();
     const { colorScheme, setColorScheme } = useMantineColorScheme();
     const [mounted, setMounted] = useState(false);
     const dark = colorScheme === 'dark';
@@ -23,6 +25,7 @@ export default function Header({ opened, toggle }: HeaderProps) {
 
     const handleLogout = () => {
         localStorage.removeItem('userId');
+        resetContext();
         router.push('/login');
     };
 

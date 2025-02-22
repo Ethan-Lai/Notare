@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import { useNotes } from '../context/NotesContext';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
@@ -8,6 +9,8 @@ const LoginForm = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
+  const { fetchNotes } = useNotes();
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -42,6 +45,7 @@ const LoginForm = () => {
         console.log('Saved userId to localStorage:', localStorage.getItem('userId'));
         alert('Success!');
         router.push('/');
+        fetchNotes();
       } else {
         console.error('No user ID found in response');
         alert('Login error: No user ID received');
