@@ -7,6 +7,7 @@ export default function CreateNote({ note, setNote }) {
   const [notes, setNotes] = useState([]);
   const [newNote, setNewNote] = useState({ title: '', content: '', tag: 0 }); 
   const [tagInput, setTagInput] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     // only update if there is actually new content
@@ -18,6 +19,18 @@ export default function CreateNote({ note, setNote }) {
       }));
     }
   }, [note]);
+
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const filteredNotes = notes.filter(note => {
+    const matchesTitle = note.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesTag = note.tag.toString() === searchQuery; // Check if tag matches the search query
+    return matchesTitle || matchesTag; // Return true if either matches
+});
+
 
   const handleCreateNote = async () => {
     const userId = localStorage.getItem('userId');
@@ -56,6 +69,11 @@ export default function CreateNote({ note, setNote }) {
   const handleContentChange = (e) => {
     setNewNote({ ...newNote, content: e.target.value });
   };
+
+  const handleNoteClick = (note) => {
+    setNewNote(note); // Set the selected note to the newNote state
+  };
+
 
   const handleTitleChange = (e) => {
     setNewNote({ ...newNote, title: e.target.value });
@@ -123,16 +141,26 @@ export default function CreateNote({ note, setNote }) {
           <button onClick={saveNote}>Save Note</button>
         </div>
       )}
-      <div>
-        <h2>All Notes</h2>
-        {notes.map((note) => (
-          <div key={note.id}>
-            <h3>{note.title}</h3>
-            <p>{note.content}</p>
-            <p>Tag: {note.tag}</p>
-          </div>
-        ))}
-      </div>
+      
+        <div>
+          <h2>All Notes</h2>
+          {filteredNotes.length > 0 ? (
+            filteredNotes.map((note) => (
+              <div key={note.id}>
+                <h3 onClick={() => handleNoteClick(note)}style={{ 
+                    cursor: 'pointer', 
+                    textDecoration: 'underline'
+                  }}>
+                    {note.title}
+                  </h3>
+                <p>{note.content}</p>
+                <p>Tag: {note.tag}</p>
+              </div>
+            ))
+          ) : (
+            <p>No notes found.</p>
+          )}
+        </div>
     </div>
   );
 }
