@@ -59,56 +59,60 @@ export default function EditNote({ note }: EditNoteProps) {
     const handleDeleteNote = async () => {
         try {
           // Mark the note for deletion
-          const markResponse = await fetch("/api/notes/markDeletion", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ noteId: note.id, authorId: note.authorId }),
-          });
-    
-          if (!markResponse.ok) {
+          if (!note.canDelete){
+            const markResponse = await fetch("/api/notes/markDeletion", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ noteId: note.id, authorId: note.authorId }),
+              });
+        
+              if (!markResponse.ok) {
+                notifications.show({
+                    color: "red",
+                    title: "Deletion Error.",
+                    message: "There was an issue moving your note to the trash.",
+                    position: "top-center",
+                });
+                return;
+              }
+              handleTagChange(-1);
+          } else{
+            const deleteResponse = await fetch("/api/notes/delete", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ noteId: note.id, authorId: note.authorId }),
+              });
+        
+              if (!deleteResponse.ok) {
+                notifications.show({
+                    color: "red",
+                    title: "Deletion Error.",
+                    message: "There was an issue deleting your note.",
+                    position: "top-center",
+                });
+              }
+        
+              // Remove the note from the local state
+              deleteNote(note.id);
+          }
+        
             notifications.show({
-                color: "red",
-                title: "Deletion Error.",
-                message: "There was an issue deleting your note.",
+                color: "green",
+                title: "Note Deleted.",
+                message: "Your note has been successfully deleted.",
                 position: "top-center",
             });
-          }
-    
-          // Delete the note
-          const deleteResponse = await fetch("/api/notes/delete", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ noteId: note.id, authorId: note.authorId }),
-          });
-    
-          if (!deleteResponse.ok) {
-            notifications.show({
-                color: "red",
-                title: "Deletion Error.",
-                message: "There was an issue deleting your note.",
-                position: "top-center",
-            });
-          }
-    
-          // Remove the note from the local state
-          deleteNote(note.id);
-    
-          notifications.show({
-            color: "green",
-            title: "Note Deleted.",
-            message: "Your note has been successfully deleted.",
-            position: "top-center",
-          });
+                setActiveNote(null);
+            
         } catch (error) {
-            console.error("Deletion Error:", error); // Log the error
-            notifications.show({
-                color: "red",
-                title: "Deletion Error.",
-                message: "There was an issue deleting your note.",
-                position: "top-center",
-            });
-        }
-        setActiveNote(null);
+                console.error("Deletion Error:", error); // Log the error
+                notifications.show({
+                    color: "red",
+                    title: "Deletion Error.",
+                    message: "There was an issue deleting your note.",
+                    position: "top-center",
+                });
+            }
       };
     
 
