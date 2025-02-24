@@ -141,7 +141,19 @@ export default function CreateNote({ note, setNote }) {
           <button onClick={saveNote}>Save Note</button>
         </div>
       )}
-      
+      <input
+        type="text"
+        placeholder="Search notes by title or tag..."
+        value={searchQuery}
+        onChange={handleSearchChange}
+        style={{
+          width: '100%',
+          padding: '10px',
+          marginBottom: '20px',
+          border: '1px solid #ccc',
+          borderRadius: '5px',
+        }}
+      />
         <div>
           <h2>All Notes</h2>
           {filteredNotes.length > 0 ? (
