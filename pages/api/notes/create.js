@@ -17,6 +17,7 @@ export default async function handler(req, res) {
           content: content || '',
           tag: tag || 0, // Default tag
           authorId,
+          canDelete: false,
         },
       });
 
