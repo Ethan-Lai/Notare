@@ -75,6 +75,10 @@ export function NotesProvider({ children }) {
         setInitialLoad(true);
     };
 
+    const deleteNote = (noteId) => {
+        setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
+      };
+
     useEffect(() => {
         fetchNotes()
     }, []);
@@ -89,7 +93,8 @@ export function NotesProvider({ children }) {
             fetchNotes,
             activeNote,
             setActiveNote,
-            resetContext
+            resetContext,
+            deleteNote
         }}>
             {children}
         </NotesContext.Provider>
