@@ -5,7 +5,12 @@ const NotesContext = createContext();
 export function NotesProvider({ children }) {
     const [notes, setNotes] = useState([]);
     const [initialLoad, setInitialLoad] = useState(true);
-    const [activeNote, setActiveNote] = useState(null);
+    const [activeNoteId, setActiveNoteId] = useState(null);
+    const [openedNotesIds, setOpenedNoteIds] = useState([]);
+
+    // Use computed variable for activeNote and openedNotes to avoid having to update
+    const activeNote = notes.find((note) => note.id === activeNoteId);
+    const openedNotes = openedNotesIds.map(id => notes.find((note) => note.id === id)).filter(Boolean);
 
     const fetchNotes = async () => {
         try {
@@ -36,14 +41,56 @@ export function NotesProvider({ children }) {
         throw new Error('Failed to create note');
     };
 
+    /** Opens a note as the active note and adds it to the list of opened notes **/
+    const openNote = (noteId) => {
+        const matchingNote = notes.find((n) => noteId === n.id);
+        if (!matchingNote) {
+            return;
+        }
+
+        // Add to list of opened notes if not already there and set as active
+        if (!openedNotes.find((note) => note.id === noteId)) {
+            setOpenedNoteIds(prev => [...prev, noteId]);
+        }
+        setActiveNoteId(matchingNote.id);
+    }
+
+    /** Closes a note with the given id, removing it as the active note and from the list of opened notes **/
+    const closeNote = (noteId) => {
+        // Verify note is opened
+        const noteIndex = openedNotesIds.indexOf(noteId);
+        if (noteIndex === -1) {
+            return;
+        }
+
+        // If it isn't the active note, simply remove it from the list of opened notes
+        if (activeNoteId !== noteId) {
+            setOpenedNoteIds(prev => prev.filter(id => id !== noteId));
+            return;
+        }
+
+        // Otherwise, need to set a new note as active (if possible)
+        if (openedNotesIds.length === 1) {
+            // No other notes available, reset everything to default
+            setOpenedNoteIds([]);
+            setActiveNoteId(null);
+        } else {
+            // Choose previous note if it exists, otherwise next one as new active note
+            const nextIndex = noteIndex > 0 ? noteIndex - 1: noteIndex + 1;
+            const newActiveNoteId = openedNotesIds[nextIndex];
+            setOpenedNoteIds(prev => prev.filter(id => id !== noteId));
+            setActiveNoteId(newActiveNoteId);
+        }
+    }
+
     // Declare one update function for automatic in-memory updates, and the other for persisting changes to DB
     const updateNoteLocally = (noteData) => {
-        setNotes(prevNotes => notes.map((note) =>
+        setNotes(prevNotes => prevNotes.map((note) =>
             note.id === noteData.id ? noteData : note
         ));
 
         if (activeNote && activeNote.id === noteData.id) {
-            setActiveNote(noteData);
+            setActiveNoteId(noteData.id);
         }
     }
 
@@ -71,7 +118,7 @@ export function NotesProvider({ children }) {
 
     const resetContext = () => {
         setNotes([]);
-        setActiveNote(null);
+        setActiveNoteId(null);
         setInitialLoad(true);
     };
 
@@ -88,7 +135,10 @@ export function NotesProvider({ children }) {
             updateNoteInDB,
             fetchNotes,
             activeNote,
-            setActiveNote,
+            setActiveNoteId,
+            openNote,
+            closeNote,
+            openedNotes,
             resetContext
         }}>
             {children}

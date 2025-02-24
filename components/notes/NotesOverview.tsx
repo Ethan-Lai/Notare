@@ -9,7 +9,7 @@ export default function NotesOverview() {
     const height = 180;
 
     return (
-        <Stack>
+        <Stack p={0}>
             <SimpleGrid
                 cols={{ base: 1, sm: 1, md: 2, lg: 3 }}
             >
