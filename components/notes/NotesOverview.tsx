@@ -19,8 +19,11 @@ export default function NotesOverview() {
 
   // Get suggestions for Autocomplete
   const suggestions = notes
-    .map((note) => note.title)
-    .filter((title) => title.toLowerCase().includes(searchQuery.toLowerCase()));
+    .filter((note) => note.title.toLowerCase().includes(searchQuery.toLowerCase()))
+    .map((note) => ({
+        value: `${note.id}`, // Use note ID as the unique value
+        label: note.title    // Display title to the user
+    }));
 
   return (
     <Stack>
