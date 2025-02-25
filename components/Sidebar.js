@@ -34,6 +34,7 @@ export default function Sidebar({ opened }) {
                 content: '',
                 tag: 0,
                 authorId: parseInt(userId, 10),
+                canDelete: false
             });
             setActiveNote(createdNote);
         } catch (error) {

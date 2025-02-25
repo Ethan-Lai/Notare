@@ -16,13 +16,14 @@ export default async function handler(req, res) {
           title: title || 'Untitled Note',
           content: content || '',
           tag: tag || 0, // Default tag
-          authorId,
+          authorId: authorId, // Default author
           canDelete: false,
         },
       });
 
       res.status(201).json(newNote);
     } catch (error) {
+      console.error('Error creating note:', error);
       res.status(500).json({ error: 'Failed to create note', details: error.message });
     }
   } else {
