@@ -6,7 +6,7 @@ import {notifications} from "@mantine/notifications";
 
 export default function Sidebar({ opened }) {
     const [expandedTags, setExpandedTags] = useState({});
-    const { notes, activeNote, createNote, setActiveNote, initialLoad } = useNotes();
+    const { notes, activeNote, createNote, openNote, initialLoad, setActiveNoteId } = useNotes();
 
     // Sort notes by tag 
     const notesByTag = notes?.length > 0 ? Object.groupBy(notes, note => note.tag) : {};
@@ -35,7 +35,7 @@ export default function Sidebar({ opened }) {
                 tag: 0,
                 authorId: parseInt(userId, 10),
             });
-            setActiveNote(createdNote);
+            openNote(createdNote.id);
         } catch (error) {
             console.error(error);
             notifications.show({
@@ -68,7 +68,7 @@ export default function Sidebar({ opened }) {
                 label="Home"
                 key={"Home"}
                 leftSection={<IconHome2 />}
-                onClick={() => setActiveNote(null)}
+                onClick={() => setActiveNoteId(null)}
                 active={!activeNote}
             />
             <Divider mt="sm"/>
@@ -93,7 +93,7 @@ export default function Sidebar({ opened }) {
                                 component="button"
                                 label={note.title ? note.title : "Untitled Note"}
                                 variant="light"
-                                onClick={() => setActiveNote(note)}
+                                onClick={() => openNote(note.id)}
                                 active={activeNote?.id === note.id}
                             />
                         ))}
