@@ -4,4 +4,6 @@ type Note = {
     title: string;
     tag: number;
     createdAt: Date;
+    canDelete: boolean;
+    authorId: number;
 }

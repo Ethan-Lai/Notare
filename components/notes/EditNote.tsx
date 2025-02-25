@@ -1,8 +1,8 @@
-import {Group, NumberInput, Stack, Text, Textarea, TextInput} from "@mantine/core";
+import {Group, NumberInput, Stack, Text, Textarea, TextInput, Button} from "@mantine/core";
 import {useNotes} from "@/context/NotesContext";
 import {useDebouncedValue} from "@mantine/hooks";
 import {ChangeEvent, useEffect, useState} from "react";
-import {IconRefresh} from "@tabler/icons-react";
+import {IconRefresh, IconTrash} from "@tabler/icons-react";
 import {notifications} from "@mantine/notifications";
 
 export interface EditNoteProps {
@@ -10,9 +10,10 @@ export interface EditNoteProps {
 }
 
 export default function EditNote({ note }: EditNoteProps) {
-    const { updateNoteLocally, updateNoteInDB } = useNotes();
+    const { updateNoteLocally, updateNoteInDB, deleteNote, setActiveNoteId} = useNotes();
     const [saving, setSaving] = useState(false);
     const [hasEdited, setHasEdited] = useState(false);
+    const TRASH_TAG = -1; 
 
     // Update note in DB automatically shortly after user has stopped typing
     const [debouncedTitle] = useDebouncedValue(note.title, 500);
@@ -60,6 +61,71 @@ export default function EditNote({ note }: EditNoteProps) {
         setHasEdited(true);
     }
 
+    const handleDeleteNote = async () => {
+        
+        try {
+          // Mark the note for deletion
+          
+          if (note.canDelete === false){
+            const markResponse = await fetch("/api/notes/markDeletion", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ noteId: note.id, authorId: note.authorId }),
+              });
+        
+              if (!markResponse.ok) {
+                notifications.show({
+                    color: "red",
+                    title: "Deletion Error.",
+                    message: "There was an issue moving your note to the trash.",
+                    position: "top-center",
+                });
+                return;
+              }
+                const updatedNote = await markResponse.json();
+                updateNoteLocally({ ...updatedNote, tag: TRASH_TAG});
+                updateNoteInDB({ ...updatedNote, tag: TRASH_TAG});
+              
+            } else{
+                const deleteResponse = await fetch("/api/notes/delete", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ noteId: note.id, authorId: note.authorId }),
+                });
+            
+                if (!deleteResponse.ok) {
+                    notifications.show({
+                        color: "red",
+                        title: "Deletion Error.",
+                        message: "There was an issue deleting your note.",
+                        position: "top-center",
+                    });
+                }
+            
+                // Remove the note from the local state
+                deleteNote(note.id);
+            }
+        
+            notifications.show({
+                color: "green",
+                title: "Note Deleted.",
+                message: "Your note has been successfully deleted.",
+                position: "top-center",
+            });
+                setActiveNoteId(null);
+            
+        } catch (error) {
+                console.error("Deletion Error:", error); // Log the error
+                notifications.show({
+                    color: "red",
+                    title: "Deletion Error.",
+                    message: "There was an issue deleting your note.",
+                    position: "top-center",
+                });
+            }
+      };
+    
+
     return (
         <Stack p={0} gap={0} mt="sm">
             <Group justify="space-between">
@@ -79,6 +145,14 @@ export default function EditNote({ note }: EditNoteProps) {
                     <IconRefresh size={16} />
                     <Text size="sm" c="dimmed">Saving...</Text>
                 </Group>
+                <Button
+                    color="red"
+                    leftSection={<IconTrash size={16} />}
+                    onClick={handleDeleteNote}
+                    mt="md"
+                >
+                    Delete Note
+                </Button>
             </Group>
 
             <TextInput
@@ -99,6 +173,7 @@ export default function EditNote({ note }: EditNoteProps) {
                 size="md"
                 variant="unstyled"
             />
+            
         </Stack>
     )
 }

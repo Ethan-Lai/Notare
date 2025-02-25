@@ -17,6 +17,7 @@ export function NotesProvider({ children }) {
             const userId = localStorage.getItem('userId');
             const response = await fetch(`/api/notes/getAll?userId=${userId}`);
             const data = await response.json();
+            console.log("Backend response:", data); 
             setNotes(data);
         } catch (error) {
             console.error('Error fetching notes:', error);
@@ -85,12 +86,14 @@ export function NotesProvider({ children }) {
 
     // Declare one update function for automatic in-memory updates, and the other for persisting changes to DB
     const updateNoteLocally = (noteData) => {
-        setNotes(prevNotes => prevNotes.map((note) =>
-            note.id === noteData.id ? noteData : note
-        ));
+        setNotes((prevNotes) =>
+            prevNotes.map((note) =>
+                note.id === noteData.id ? noteData : note
+            )
+        );
 
         if (activeNote && activeNote.id === noteData.id) {
-            setActiveNoteId(noteData.id);
+            setActiveNoteId(noteData);
         }
     }
 
@@ -122,6 +125,10 @@ export function NotesProvider({ children }) {
         setInitialLoad(true);
     };
 
+    const deleteNote = (noteId) => {
+        setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
+      };
+
     useEffect(() => {
         fetchNotes()
     }, []);
@@ -136,6 +143,7 @@ export function NotesProvider({ children }) {
             fetchNotes,
             activeNote,
             setActiveNoteId,
+            deleteNote,
             openNote,
             closeNote,
             openedNotes,
