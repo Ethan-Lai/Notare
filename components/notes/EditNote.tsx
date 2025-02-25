@@ -16,9 +16,13 @@ export default function EditNote({ note }: EditNoteProps) {
     const TRASH_TAG = -1; 
 
     // Update note in DB automatically shortly after user has stopped typing
-    const [debouncedNote] = useDebouncedValue(note, 500);
+    const [debouncedTitle] = useDebouncedValue(note.title, 500);
+    const [debouncedContent] = useDebouncedValue(note.content, 500);
+    const [debouncedTag] = useDebouncedValue(note.tag, 500);
+
     useEffect(() => {
         // Prevent API update call on initial load
+        console.log(hasEdited);
         if (!hasEdited) return;
 
         const updateNote = async () => {
@@ -39,7 +43,7 @@ export default function EditNote({ note }: EditNoteProps) {
         }
 
         updateNote();
-    }, [debouncedNote]);
+    }, [debouncedTitle, debouncedContent, debouncedTag]);
 
     const handleTitleChange = (e: ChangeEvent<HTMLInputElement>) => {
         updateNoteLocally({ ...note, title: e.target.value });
@@ -123,7 +127,7 @@ export default function EditNote({ note }: EditNoteProps) {
     
 
     return (
-        <Stack p="xl" gap={0}>
+        <Stack p={0} gap={0} mt="sm">
             <Group justify="space-between">
                 <NumberInput
                     variant="filled"
