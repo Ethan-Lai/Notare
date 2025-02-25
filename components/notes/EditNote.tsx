@@ -10,7 +10,7 @@ export interface EditNoteProps {
 }
 
 export default function EditNote({ note }: EditNoteProps) {
-    const { updateNoteLocally, updateNoteInDB, deleteNote, setActiveNote} = useNotes();
+    const { updateNoteLocally, updateNoteInDB, deleteNote, setActiveNoteId} = useNotes();
     const [saving, setSaving] = useState(false);
     const [hasEdited, setHasEdited] = useState(false);
     const TRASH_TAG = -1; 
@@ -108,7 +108,7 @@ export default function EditNote({ note }: EditNoteProps) {
                 message: "Your note has been successfully deleted.",
                 position: "top-center",
             });
-                setActiveNote(null);
+                setActiveNoteId(null);
             
         } catch (error) {
                 console.error("Deletion Error:", error); // Log the error

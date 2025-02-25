@@ -9,7 +9,7 @@ interface NotePreviewProps {
 
 export default function NotePreview(props: NotePreviewProps) {
     const { note, height } = props;
-    const { setActiveNote } = useNotes();
+    const { setActiveNoteId } = useNotes();
 
     // NOTE: Currently displays when it was created, should probably change this to when it was last edited later
     const timeString = getRelativeTimeString(new Date(note.createdAt), navigator.language);
@@ -21,7 +21,7 @@ export default function NotePreview(props: NotePreviewProps) {
             withBorder
             h={height}
             style={{ cursor: "pointer" }}
-            onClick={() => setActiveNote(note)}
+            onClick={() => setActiveNoteId(note)}
         >
             <Stack gap={4} flex={1}>
                 <Group justify="space-between">

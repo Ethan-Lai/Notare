@@ -5,7 +5,7 @@ const NotesContext = createContext();
 export function NotesProvider({ children }) {
     const [notes, setNotes] = useState([]);
     const [initialLoad, setInitialLoad] = useState(true);
-    const [activeNote, setActiveNote] = useState(null);
+    const [activeNote, setActiveNoteId] = useState(null);
 
     const fetchNotes = async () => {
         try {
@@ -46,7 +46,7 @@ export function NotesProvider({ children }) {
         );
 
         if (activeNote && activeNote.id === noteData.id) {
-            setActiveNote(noteData);
+            setActiveNoteId(noteData);
         }
     }
 
@@ -74,7 +74,7 @@ export function NotesProvider({ children }) {
 
     const resetContext = () => {
         setNotes([]);
-        setActiveNote(null);
+        setActiveNoteId(null);
         setInitialLoad(true);
     };
 
@@ -95,7 +95,7 @@ export function NotesProvider({ children }) {
             updateNoteInDB,
             fetchNotes,
             activeNote,
-            setActiveNote,
+            setActiveNoteId,
             resetContext,
             deleteNote
         }}>
