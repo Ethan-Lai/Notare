@@ -93,7 +93,7 @@ export function NotesProvider({ children }) {
         );
 
         if (activeNote && activeNote.id === noteData.id) {
-            setActiveNoteId(noteData);
+            setActiveNoteId(noteData.id);
         }
     }
 
