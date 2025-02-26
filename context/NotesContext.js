@@ -9,7 +9,7 @@ export function NotesProvider({ children }) {
     const [openedNotesIds, setOpenedNoteIds] = useState([]);
 
     // Use computed variable for activeNote and openedNotes to avoid having to update
-    const activeNote = notes.find((note) => note.id === activeNoteId);
+    const activeNote = (notes.length && activeNoteId) ? notes.find((note) => note.id === activeNoteId) : null;
     const openedNotes = openedNotesIds.map(id => notes.find((note) => note.id === id)).filter(Boolean);
 
     const fetchNotes = async () => {
