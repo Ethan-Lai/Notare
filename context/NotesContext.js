@@ -16,9 +16,11 @@ export function NotesProvider({ children }) {
         try {
             const userId = localStorage.getItem('userId');
             const response = await fetch(`/api/notes/getAll?userId=${userId}`);
-            const data = await response.json();
-            console.log("Backend response:", data); 
-            setNotes(data);
+            if (response.ok) {
+                const data = await response.json();
+                console.log("Backend response:", data);
+                setNotes(data);
+            }
         } catch (error) {
             console.error('Error fetching notes:', error);
         }
@@ -110,7 +112,7 @@ export function NotesProvider({ children }) {
         if (response.ok) {
             const updatedNote = await response.json();
             setNotes(prevNotes =>
-                prevNotes.map(note => 
+                prevNotes.map(note =>
                 note.id === updatedNote.id ? updatedNote : note
                 )
             );
