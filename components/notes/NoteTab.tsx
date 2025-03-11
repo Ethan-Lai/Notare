@@ -18,7 +18,7 @@ export default function NoteTab({ note }: NoteTabProps) {
             ref={ref}
         >
             <Flex gap="sm">
-                <Text size="sm">{note.title}</Text>
+                <Text size="sm">{note.title.length > 20 ? `${note.title.substring(0, 20)}...` : note.title}</Text>
                 <ActionIcon
                     variant="subtle"
                     c="red"
