@@ -45,23 +45,25 @@ export default function AskGemini() {
             }
 
             const data = await res.json();
-            // Remove any HTML tags but preserve whitespace
             const response = data.message.replace(/<[^>]*>/g, '');
             
-            // Add to history
             addToHistory({ prompt: question, response: response });
 
-            // If this was an insert request and we have an active note, insert the response
             if (isInsertRequest && activeNote) {
-                // Get placement suggestion
+                // Get placement suggestion with more detailed analysis
                 const placementRes = await fetch('/api/assistant/ask', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        question: "Given this note content, where should I insert your response? Please analyze the content structure and suggest the best position (start, end, or after a specific section). Only respond with the position, no explanation needed.",
-                        context: activeNote.content
+                        question: `Analyze this note content and determine where to insert new content. Find the most relevant position based on context and topic.
+                        If you find a specific line that the new content should follow, respond with "after: " followed by that line.
+                        If it should go at the start, respond with "start".
+                        If it should go at the end, respond with "end".
+                        Only respond with one of these formats, no explanation.
+                        Note content: "${activeNote.content}"`,
+                        context: response // Providing the response as context to help with placement
                     })
                 });
 
@@ -72,15 +74,38 @@ export default function AskGemini() {
                 const placementData = await placementRes.json();
                 const placement = placementData.message.toLowerCase();
 
-                // Insert the response
+                // Insert the response based on more specific placement
                 let newContent = activeNote.content;
-                if (placement.includes('start')) {
-                    newContent = `AI Response:\n${response}\n\n${activeNote.content}`;
+                if (placement === 'start') {
+                    newContent = `${response}\n\n${activeNote.content}`;
+                } else if (placement === 'end') {
+                    newContent = `${activeNote.content}\n\n${response}`;
+                } else if (placement.startsWith('after: ')) {
+                    const targetLine = placement.substring(7);
+                    const parts = activeNote.content.split('\n');
+                    let insertIndex = -1;
+                    
+                    // Find the line that matches our target
+                    for (let i = 0; i < parts.length; i++) {
+                        if (parts[i].trim() === targetLine.trim()) {
+                            insertIndex = i;
+                            break;
+                        }
+                    }
+
+                    if (insertIndex !== -1) {
+                        // Insert after the found line
+                        parts.splice(insertIndex + 1, 0, '\n' + response);
+                        newContent = parts.join('\n');
+                    } else {
+                        // Fallback to end if line not found
+                        newContent = `${activeNote.content}\n\n${response}`;
+                    }
                 } else {
-                    newContent = `${activeNote.content}\n\nAI Response:\n${response}`;
+                    // Fallback to end if format not recognized
+                    newContent = `${activeNote.content}\n\n${response}`;
                 }
 
-                // Update the note
                 updateNoteLocally({ ...activeNote, content: newContent });
 
                 notifications.show({
