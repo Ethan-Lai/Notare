@@ -130,31 +130,55 @@ export default function EditNote({ note }: EditNoteProps) {
       };
     
     const handleAIResponse = async () => {
-        if (history.length === 0) return;
-        
         setIsLoadingAI(true);
         try {
-            // Get the most recent chat entry
-            const mostRecent = history[history.length - 1];
-            const response = mostRecent.response;
+            // First, check if there are any relevant responses in the chat history
+            const relevantEntries = history.filter(entry => {
+                const promptLower = entry.prompt.toLowerCase();
+                const titleLower = note.title.toLowerCase();
+                const contentLower = note.content.toLowerCase();
+                
+                // Check if any words from the prompt appear in the note content or title
+                const promptWords = promptLower.split(/\s+/).filter(word => word.length > 3);
+                return promptWords.some(word => 
+                    titleLower.includes(word) || contentLower.includes(word)
+                );
+            });
 
-            // Get placement suggestion
+            // Get the actual AI response for the note content if no relevant entries found
+            let aiResponse = "";
+            if (relevantEntries.length > 0) {
+                // Use the most recent relevant response
+                aiResponse = relevantEntries[0].response;
+            } else {
+                // Get a new response from AI
+                const responseRes = await fetch('/api/assistant/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        question: "Please analyze this note and provide relevant insights, suggestions, or additional information. Keep the response concise and focused.",
+                        context: note.content
+                    })
+                });
+
+                if (!responseRes.ok) {
+                    throw new Error('Failed to get AI response');
+                }
+
+                const responseData = await responseRes.json();
+                aiResponse = responseData.message;
+            }
+
+            // Ask AI about where to insert the response
             const placementRes = await fetch('/api/assistant/ask', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    question: `Analyze where to insert this response in the note content. Respond with either:
-                    - "start" for beginning of note
-                    - "end" for end of note
-                    - "after: [exact line]" to insert after a specific line
-                    
-                    Note content:
-                    ${note.content}
-                    
-                    Response to insert:
-                    ${response}`,
+                    question: "Given this note content, where should I insert your response? Please analyze the content structure and suggest the best position (start, end, or after a specific section). Only respond with the position, no explanation needed.",
                     context: note.content
                 })
             });
@@ -164,52 +188,32 @@ export default function EditNote({ note }: EditNoteProps) {
             }
 
             const placementData = await placementRes.json();
-            const placement = placementData.message.toLowerCase().trim();
+            const placement = placementData.message.toLowerCase();
 
-            // Insert the response based on more specific placement
+            // Determine where to insert the response
             let newContent = note.content;
-            if (placement === 'start') {
-                newContent = `${response}\n\n${note.content}`;
-            } else if (placement === 'end' || !placement) {
-                newContent = `${note.content}\n\n${response}`;
-            } else if (placement.startsWith('after:')) {
-                const targetLine = placement.substring(6).trim();
-                const parts = note.content.split('\n');
-                let insertIndex = -1;
-                
-                // Find the line that matches our target
-                for (let i = 0; i < parts.length; i++) {
-                    if (parts[i].trim() === targetLine.trim()) {
-                        insertIndex = i;
-                        break;
-                    }
-                }
-
-                if (insertIndex !== -1) {
-                    // Insert after the found line
-                    parts.splice(insertIndex + 1, 0, response);
-                    newContent = parts.join('\n');
-                } else {
-                    // Fallback to end if line not found
-                    newContent = `${note.content}\n\n${response}`;
-                }
+            if (placement.includes('start')) {
+                newContent = `AI Response:\n${aiResponse}\n\n${note.content}`;
+            } else {
+                newContent = `${note.content}\n\nAI Response:\n${aiResponse}`;
             }
 
+            // Update the note with the new content
             updateNoteLocally({ ...note, content: newContent });
             setHasEdited(true);
 
             notifications.show({
                 color: 'green',
                 title: 'Success',
-                message: 'Response has been inserted into your note.',
+                message: 'AI response has been inserted into your note.',
                 position: 'top-right'
             });
         } catch (error) {
-            console.error('Error inserting response:', error);
+            console.error('Error getting AI response:', error);
             notifications.show({
                 color: 'red',
                 title: 'Error',
-                message: 'Failed to insert response.',
+                message: 'Failed to get AI response.',
                 position: 'top-right'
             });
         }
