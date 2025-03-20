@@ -130,56 +130,28 @@ export default function EditNote({ note }: EditNoteProps) {
       };
     
     const handleAIResponse = async () => {
+        if (history.length === 0) return;
+        
         setIsLoadingAI(true);
         try {
-            // First, check if there are any relevant responses in the chat history
-            const relevantEntries = history.filter(entry => {
-                const promptLower = entry.prompt.toLowerCase();
-                const titleLower = note.title.toLowerCase();
-                const contentLower = note.content.toLowerCase();
-                
-                // Check if any words from the prompt appear in the note content or title
-                const promptWords = promptLower.split(/\s+/).filter(word => word.length > 3);
-                return promptWords.some(word => 
-                    titleLower.includes(word) || contentLower.includes(word)
-                );
-            });
+            // Get the most recent chat entry
+            const mostRecent = history[history.length - 1];
+            const response = mostRecent.response;
 
-            // Get the actual AI response for the note content if no relevant entries found
-            let aiResponse = "";
-            if (relevantEntries.length > 0) {
-                // Use the most recent relevant response
-                aiResponse = relevantEntries[0].response;
-            } else {
-                // Get a new response from AI
-                const responseRes = await fetch('/api/assistant/ask', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        question: "Please analyze this note and provide relevant insights, suggestions, or additional information. Keep the response concise and focused.",
-                        context: note.content
-                    })
-                });
-
-                if (!responseRes.ok) {
-                    throw new Error('Failed to get AI response');
-                }
-
-                const responseData = await responseRes.json();
-                aiResponse = responseData.message;
-            }
-
-            // Ask AI about where to insert the response
+            // Get placement suggestion
             const placementRes = await fetch('/api/assistant/ask', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    question: "Given this note content, where should I insert your response? Please analyze the content structure and suggest the best position (start, end, or after a specific section). Only respond with the position, no explanation needed.",
-                    context: note.content
+                    question: `Analyze this note content and determine where to insert new content. Find the most relevant position based on context and topic.
+                    If you find a specific line that the new content should follow, respond with "after: " followed by that line.
+                    If it should go at the start, respond with "start".
+                    If it should go at the end, respond with "end".
+                    Only respond with one of these formats, no explanation.
+                    Note content: "${note.content}"`,
+                    context: response
                 })
             });
 
@@ -190,30 +162,53 @@ export default function EditNote({ note }: EditNoteProps) {
             const placementData = await placementRes.json();
             const placement = placementData.message.toLowerCase();
 
-            // Determine where to insert the response
+            // Insert the response based on more specific placement
             let newContent = note.content;
-            if (placement.includes('start')) {
-                newContent = `AI Response:\n${aiResponse}\n\n${note.content}`;
+            if (placement === 'start') {
+                newContent = `${response}\n\n${note.content}`;
+            } else if (placement === 'end') {
+                newContent = `${note.content}\n\n${response}`;
+            } else if (placement.startsWith('after: ')) {
+                const targetLine = placement.substring(7);
+                const parts = note.content.split('\n');
+                let insertIndex = -1;
+                
+                // Find the line that matches our target
+                for (let i = 0; i < parts.length; i++) {
+                    if (parts[i].trim() === targetLine.trim()) {
+                        insertIndex = i;
+                        break;
+                    }
+                }
+
+                if (insertIndex !== -1) {
+                    // Insert after the found line
+                    parts.splice(insertIndex + 1, 0, '\n' + response);
+                    newContent = parts.join('\n');
+                } else {
+                    // Fallback to end if line not found
+                    newContent = `${note.content}\n\n${response}`;
+                }
             } else {
-                newContent = `${note.content}\n\nAI Response:\n${aiResponse}`;
+                // Fallback to end if format not recognized
+                newContent = `${note.content}\n\n${response}`;
             }
 
-            // Update the note with the new content
             updateNoteLocally({ ...note, content: newContent });
             setHasEdited(true);
 
             notifications.show({
                 color: 'green',
                 title: 'Success',
-                message: 'AI response has been inserted into your note.',
+                message: 'Most recent AI response has been inserted into your note.',
                 position: 'top-right'
             });
         } catch (error) {
-            console.error('Error getting AI response:', error);
+            console.error('Error inserting AI response:', error);
             notifications.show({
                 color: 'red',
                 title: 'Error',
-                message: 'Failed to get AI response.',
+                message: 'Failed to insert AI response.',
                 position: 'top-right'
             });
         }
