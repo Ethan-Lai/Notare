@@ -19,15 +19,17 @@ export default function AskGemini() {
     const [question, setQuestion] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const { history, addToHistory, clearHistory } = useChat();
-
-    // Access active note (if existing) to provide as context
-    const { activeNote } = useNotes();
+    const { activeNote, updateNoteLocally } = useNotes();
 
     const handleSubmit = async (e?: FormEvent) => {
         e?.preventDefault();
         setIsLoading(true);
 
         try {
+            // Check if this is a request to insert into note
+            const isInsertRequest = question.toLowerCase().includes('insert') && 
+                                  question.toLowerCase().includes('note');
+
             const body = { question: question, context: activeNote?.content };
             const res = await fetch('/api/assistant/ask', {
                 method: 'POST',
@@ -41,16 +43,59 @@ export default function AskGemini() {
             }
 
             const data = await res.json();
-            addToHistory({ prompt: question, response: data.message });
-            setQuestion("");
+            const response = data.message;
+            
+            // Add to history
+            addToHistory({ prompt: question, response: response });
 
+            // If this was an insert request and we have an active note, insert the response
+            if (isInsertRequest && activeNote) {
+                // Get placement suggestion
+                const placementRes = await fetch('/api/assistant/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        question: "Given this note content, where should I insert your response? Please analyze the content structure and suggest the best position (start, end, or after a specific section). Only respond with the position, no explanation needed.",
+                        context: activeNote.content
+                    })
+                });
+
+                if (!placementRes.ok) {
+                    throw new Error('Failed to get AI placement suggestion');
+                }
+
+                const placementData = await placementRes.json();
+                const placement = placementData.message.toLowerCase();
+
+                // Insert the response
+                let newContent = activeNote.content;
+                if (placement.includes('start')) {
+                    newContent = `AI Response:\n${response}\n\n${activeNote.content}`;
+                } else {
+                    newContent = `${activeNote.content}\n\nAI Response:\n${response}`;
+                }
+
+                // Update the note
+                updateNoteLocally({ ...activeNote, content: newContent });
+
+                notifications.show({
+                    color: 'green',
+                    title: 'Success',
+                    message: 'AI response has been inserted into your note.',
+                    position: 'top-right'
+                });
+            }
+
+            setQuestion("");
         } catch (err) {
             console.error(err);
             notifications.show({
                 color: 'red',
                 title: 'Error',
                 message: "Sorry, something went wrong.",
-                position: "top-right"
+                position: 'top-right'
             });
         }
 

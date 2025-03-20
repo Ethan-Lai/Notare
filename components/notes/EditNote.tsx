@@ -145,19 +145,31 @@ export default function EditNote({ note }: EditNoteProps) {
                 );
             });
 
-            if (relevantEntries.length === 0) {
-                notifications.show({
-                    color: 'blue',
-                    title: 'No Relevant Responses',
-                    message: 'No relevant AI responses found in chat history. Try asking a question in the chat first.',
-                    position: 'top-right'
+            // Get the actual AI response for the note content if no relevant entries found
+            let aiResponse = "";
+            if (relevantEntries.length > 0) {
+                // Use the most recent relevant response
+                aiResponse = relevantEntries[0].response;
+            } else {
+                // Get a new response from AI
+                const responseRes = await fetch('/api/assistant/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        question: "Please analyze this note and provide relevant insights, suggestions, or additional information. Keep the response concise and focused.",
+                        context: note.content
+                    })
                 });
-                setIsLoadingAI(false);
-                return;
-            }
 
-            // Log for debugging
-            console.log('Found relevant entries:', relevantEntries);
+                if (!responseRes.ok) {
+                    throw new Error('Failed to get AI response');
+                }
+
+                const responseData = await responseRes.json();
+                aiResponse = responseData.message;
+            }
 
             // Ask AI about where to insert the response
             const placementRes = await fetch('/api/assistant/ask', {
@@ -178,17 +190,12 @@ export default function EditNote({ note }: EditNoteProps) {
             const placementData = await placementRes.json();
             const placement = placementData.message.toLowerCase();
 
-            // Combine all relevant responses
-            const combinedResponse = relevantEntries
-                .map(entry => `Q: ${entry.prompt}\nA: ${entry.response}`)
-                .join('\n\n');
-
             // Determine where to insert the response
             let newContent = note.content;
             if (placement.includes('start')) {
-                newContent = `AI Responses from Chat:\n${combinedResponse}\n\n${note.content}`;
+                newContent = `AI Response:\n${aiResponse}\n\n${note.content}`;
             } else {
-                newContent = `${note.content}\n\nAI Responses from Chat:\n${combinedResponse}`;
+                newContent = `${note.content}\n\nAI Response:\n${aiResponse}`;
             }
 
             // Update the note with the new content
@@ -198,7 +205,7 @@ export default function EditNote({ note }: EditNoteProps) {
             notifications.show({
                 color: 'green',
                 title: 'Success',
-                message: 'AI responses from chat have been inserted into your note.',
+                message: 'AI response has been inserted into your note.',
                 position: 'top-right'
             });
         } catch (error) {
