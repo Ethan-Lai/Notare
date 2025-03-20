@@ -132,53 +132,26 @@ export default function EditNote({ note }: EditNoteProps) {
     const handleAIResponse = async () => {
         setIsLoadingAI(true);
         try {
-            // First, check if there are any relevant responses in the chat history
-            const relevantEntries = history.filter(entry => {
-                const promptLower = entry.prompt.toLowerCase();
-                const titleLower = note.title.toLowerCase();
-                const contentLower = note.content.toLowerCase();
-                
-                // Check if any words from the prompt appear in the note content or title
-                const promptWords = promptLower.split(/\s+/).filter(word => word.length > 3);
-                return promptWords.some(word => 
-                    titleLower.includes(word) || contentLower.includes(word)
-                );
-            });
-
-            // Get the actual AI response for the note content if no relevant entries found
-            let aiResponse = "";
-            if (relevantEntries.length > 0) {
-                // Use the most recent relevant response
-                aiResponse = relevantEntries[0].response;
-            } else {
-                // Get a new response from AI
-                const responseRes = await fetch('/api/assistant/ask', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        question: "Please analyze this note and provide relevant insights, suggestions, or additional information. Keep the response concise and focused.",
-                        context: note.content
-                    })
+            // Get the most recent response from chat history
+            const mostRecentEntry = history[history.length - 1];
+            if (!mostRecentEntry) {
+                notifications.show({
+                    color: 'yellow',
+                    title: 'No Response Available',
+                    message: 'Please ask a question first to get an AI response.',
+                    position: 'top-right'
                 });
-
-                if (!responseRes.ok) {
-                    throw new Error('Failed to get AI response');
-                }
-
-                const responseData = await responseRes.json();
-                aiResponse = responseData.message;
+                return;
             }
 
-            // Ask AI about where to insert the response
+            // Get placement suggestion for the most recent response
             const placementRes = await fetch('/api/assistant/ask', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    question: "Given this note content, where should I insert your response? Please analyze the content structure and suggest the best position (start, end, or after a specific section). Only respond with the position, no explanation needed.",
+                    question: "Given this note content, suggest where to insert new content. Only respond with: 'start' or 'end'.",
                     context: note.content
                 })
             });
@@ -190,15 +163,14 @@ export default function EditNote({ note }: EditNoteProps) {
             const placementData = await placementRes.json();
             const placement = placementData.message.toLowerCase();
 
-            // Determine where to insert the response
-            let newContent = note.content;
+            // Insert the most recent response
+            let newContent;
             if (placement.includes('start')) {
-                newContent = `AI Response:\n${aiResponse}\n\n${note.content}`;
+                newContent = `${mostRecentEntry.response}\n\n${note.content}`;
             } else {
-                newContent = `${note.content}\n\nAI Response:\n${aiResponse}`;
+                newContent = `${note.content}\n\n${mostRecentEntry.response}`;
             }
 
-            // Update the note with the new content
             updateNoteLocally({ ...note, content: newContent });
             setHasEdited(true);
 
@@ -209,11 +181,11 @@ export default function EditNote({ note }: EditNoteProps) {
                 position: 'top-right'
             });
         } catch (error) {
-            console.error('Error getting AI response:', error);
+            console.error('Error inserting AI response:', error);
             notifications.show({
                 color: 'red',
                 title: 'Error',
-                message: 'Failed to get AI response.',
+                message: 'Failed to insert AI response.',
                 position: 'top-right'
             });
         }
