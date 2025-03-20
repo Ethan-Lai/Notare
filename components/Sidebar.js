@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import {AppShellNavbar, Button, Divider, NavLink, Skeleton} from '@mantine/core';
+import {AppShellNavbar, Button, Divider, NavLink, Skeleton, ScrollArea} from '@mantine/core';
 import { useNotes } from '../context/NotesContext';
-import {IconHome2, IconPlus} from "@tabler/icons-react";
+import {IconHome2, IconPlus, IconTrash} from "@tabler/icons-react";
 import {notifications} from "@mantine/notifications";
 
 export default function Sidebar({ opened }) {
@@ -53,7 +53,7 @@ export default function Sidebar({ opened }) {
     }
 
     return (
-        <AppShellNavbar p="md">
+        <AppShellNavbar p="md" style={{ height: "93vh", overflow: 'auto' }}>
             <Button
                 size="sm"
                 variant="filled"
@@ -61,6 +61,7 @@ export default function Sidebar({ opened }) {
                 leftSection={<IconPlus size={16} />}
                 mb="md"
                 onClick={createNewNote}
+                style={{ flexShrink: 0 }} 
             >
                 New Note
             </Button>
@@ -84,7 +85,8 @@ export default function Sidebar({ opened }) {
                 Object.entries(notesByTag).map(([tag, tagNotes]) => (
                     <NavLink
                         key={tag}
-                        label={`Tag ${tag}`}
+                        label={tag == -1 ? "Garbage" : `Tag ${tag}`}
+                        rightSection={tag == -1 ? <IconTrash /> : null}
                         opened={expandedTags[tag]}
                         onClick={() => toggleTag(tag)}
                     >
