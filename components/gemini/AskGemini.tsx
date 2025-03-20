@@ -184,10 +184,10 @@ export default function AskGemini() {
                                     borderRadius: '8px',
                                     overflowWrap: 'anywhere',
                                     cursor: 'grab',
-                                    backgroundColor: 'var(--mantine-color-blue-0)',
+                                    backgroundColor: 'var(--mantine-color-default-filled)',
                                     transition: 'background-color 0.2s',
                                     ':hover': {
-                                        backgroundColor: 'var(--mantine-color-blue-1)',
+                                        backgroundColor: 'var(--mantine-color-default-filled-hover)',
                                     }
                                 }}
                             >
