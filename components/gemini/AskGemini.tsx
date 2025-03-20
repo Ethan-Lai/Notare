@@ -20,17 +20,13 @@ export default function AskGemini() {
     const [question, setQuestion] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const { history, addToHistory, clearHistory } = useChat();
-    const { activeNote, updateNoteLocally } = useNotes();
+    const { activeNote } = useNotes();
 
     const handleSubmit = async (e?: FormEvent) => {
         e?.preventDefault();
         setIsLoading(true);
 
         try {
-            // Check if this is a request to insert into note
-            const isInsertRequest = question.toLowerCase().includes('insert') && 
-                                  question.toLowerCase().includes('note');
-
             const body = { question: question, context: activeNote?.content };
             const res = await fetch('/api/assistant/ask', {
                 method: 'POST',
@@ -47,75 +43,8 @@ export default function AskGemini() {
             const data = await res.json();
             const response = data.message.replace(/<[^>]*>/g, '');
             
+            // Add to history
             addToHistory({ prompt: question, response: response });
-
-            if (isInsertRequest && activeNote) {
-                // Get placement suggestion with more detailed analysis
-                const placementRes = await fetch('/api/assistant/ask', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        question: `Analyze this note content and determine where to insert new content. Find the most relevant position based on context and topic.
-                        If you find a specific line that the new content should follow, respond with "after: " followed by that line.
-                        If it should go at the start, respond with "start".
-                        If it should go at the end, respond with "end".
-                        Only respond with one of these formats, no explanation.
-                        Note content: "${activeNote.content}"`,
-                        context: response // Providing the response as context to help with placement
-                    })
-                });
-
-                if (!placementRes.ok) {
-                    throw new Error('Failed to get AI placement suggestion');
-                }
-
-                const placementData = await placementRes.json();
-                const placement = placementData.message.toLowerCase();
-
-                // Insert the response based on more specific placement
-                let newContent = activeNote.content;
-                if (placement === 'start') {
-                    newContent = `${response}\n\n${activeNote.content}`;
-                } else if (placement === 'end') {
-                    newContent = `${activeNote.content}\n\n${response}`;
-                } else if (placement.startsWith('after: ')) {
-                    const targetLine = placement.substring(7);
-                    const parts = activeNote.content.split('\n');
-                    let insertIndex = -1;
-                    
-                    // Find the line that matches our target
-                    for (let i = 0; i < parts.length; i++) {
-                        if (parts[i].trim() === targetLine.trim()) {
-                            insertIndex = i;
-                            break;
-                        }
-                    }
-
-                    if (insertIndex !== -1) {
-                        // Insert after the found line
-                        parts.splice(insertIndex + 1, 0, '\n' + response);
-                        newContent = parts.join('\n');
-                    } else {
-                        // Fallback to end if line not found
-                        newContent = `${activeNote.content}\n\n${response}`;
-                    }
-                } else {
-                    // Fallback to end if format not recognized
-                    newContent = `${activeNote.content}\n\n${response}`;
-                }
-
-                updateNoteLocally({ ...activeNote, content: newContent });
-
-                notifications.show({
-                    color: 'green',
-                    title: 'Success',
-                    message: 'AI response has been inserted into your note.',
-                    position: 'top-right'
-                });
-            }
-
             setQuestion("");
         } catch (err) {
             console.error(err);

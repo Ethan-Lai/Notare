@@ -145,12 +145,14 @@ export default function EditNote({ note }: EditNoteProps) {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    question: `Analyze this note content and determine where to insert new content. Find the most relevant position based on context and topic.
-                    If you find a specific line that the new content should follow, respond with "after: " followed by that line.
+                    question: `Given this note content, analyze where the following response would be most relevant to insert:
+                    Note content: "${note.content}"
+                    Response to insert: "${response}"
+                    
+                    If you find a specific line that the response should follow, respond with "after: " followed by that line.
                     If it should go at the start, respond with "start".
                     If it should go at the end, respond with "end".
-                    Only respond with one of these formats, no explanation.
-                    Note content: "${note.content}"`,
+                    Only respond with one of these formats, no explanation.`,
                     context: response
                 })
             });
@@ -200,15 +202,15 @@ export default function EditNote({ note }: EditNoteProps) {
             notifications.show({
                 color: 'green',
                 title: 'Success',
-                message: 'Most recent AI response has been inserted into your note.',
+                message: 'Response has been inserted into your note.',
                 position: 'top-right'
             });
         } catch (error) {
-            console.error('Error inserting AI response:', error);
+            console.error('Error inserting response:', error);
             notifications.show({
                 color: 'red',
                 title: 'Error',
-                message: 'Failed to insert AI response.',
+                message: 'Failed to insert response.',
                 position: 'top-right'
             });
         }
