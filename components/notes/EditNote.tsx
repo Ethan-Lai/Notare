@@ -133,10 +133,17 @@ export default function EditNote({ note }: EditNoteProps) {
         setIsLoadingAI(true);
         try {
             // First, check if there are any relevant responses in the chat history
-            const relevantEntries = history.filter(entry => 
-                entry.prompt.toLowerCase().includes(note.title.toLowerCase()) ||
-                note.content.toLowerCase().includes(entry.prompt.toLowerCase())
-            );
+            const relevantEntries = history.filter(entry => {
+                const promptLower = entry.prompt.toLowerCase();
+                const titleLower = note.title.toLowerCase();
+                const contentLower = note.content.toLowerCase();
+                
+                // Check if any words from the prompt appear in the note content or title
+                const promptWords = promptLower.split(/\s+/).filter(word => word.length > 3);
+                return promptWords.some(word => 
+                    titleLower.includes(word) || contentLower.includes(word)
+                );
+            });
 
             if (relevantEntries.length === 0) {
                 notifications.show({
@@ -148,6 +155,9 @@ export default function EditNote({ note }: EditNoteProps) {
                 setIsLoadingAI(false);
                 return;
             }
+
+            // Log for debugging
+            console.log('Found relevant entries:', relevantEntries);
 
             // Ask AI about where to insert the response
             const placementRes = await fetch('/api/assistant/ask', {
