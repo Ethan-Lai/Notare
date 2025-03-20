@@ -132,8 +132,8 @@ export default function EditNote({ note }: EditNoteProps) {
     const handleAIResponse = async () => {
         setIsLoadingAI(true);
         try {
-            // Get the most recent response from chat history
-            const mostRecentEntry = history[history.length - 1];
+            // Get the most recent response from chat history (it's at index 0 since entries are prepended)
+            const mostRecentEntry = history[0];
             if (!mostRecentEntry) {
                 notifications.show({
                     color: 'yellow',
@@ -163,12 +163,12 @@ export default function EditNote({ note }: EditNoteProps) {
             const placementData = await placementRes.json();
             const placement = placementData.message.toLowerCase();
 
-            // Insert the most recent response
+            // Insert just the raw response without any formatting
             let newContent;
             if (placement.includes('start')) {
-                newContent = `${mostRecentEntry.response}\n\n${note.content}`;
+                newContent = note.content ? `${mostRecentEntry.response}\n\n${note.content}` : mostRecentEntry.response;
             } else {
-                newContent = `${note.content}\n\n${mostRecentEntry.response}`;
+                newContent = note.content ? `${note.content}\n\n${mostRecentEntry.response}` : mostRecentEntry.response;
             }
 
             updateNoteLocally({ ...note, content: newContent });
