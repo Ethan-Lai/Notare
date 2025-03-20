@@ -122,9 +122,15 @@ export default function AskGemini() {
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
                     onKeyDown={(e) => handleKeyDown(e)}
-                    placeholder="Ask Gemini"
+                    placeholder={activeNote ? "Ask Gemini" : "Select a note to ask questions"}
                     aria-label="Ask Gemini"
+                    disabled={!activeNote}
                 />
+                {!activeNote && (
+                    <Text size="sm" c="dimmed" mt="xs">
+                        Please select or create a note to start asking questions
+                    </Text>
+                )}
             </form>
 
             <Group justify="space-between">

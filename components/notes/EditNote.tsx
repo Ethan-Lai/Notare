@@ -241,15 +241,17 @@ export default function EditNote({ note }: EditNoteProps) {
                 </Group>
 
                 <Group>
-                    <Button
-                        color="blue"
-                        leftSection={<IconRobot size={16} />}
-                        onClick={handleAIResponse}
-                        loading={isLoadingAI}
-                        mt="md"
-                    >
-                        Insert AI Response
-                    </Button>
+                    {history.length > 0 && (
+                        <Button
+                            color="blue"
+                            leftSection={<IconRobot size={16} />}
+                            onClick={handleAIResponse}
+                            loading={isLoadingAI}
+                            mt="md"
+                        >
+                            Insert AI Response
+                        </Button>
+                    )}
                     <Button
                         color="red"
                         leftSection={<IconTrash size={16} />}
