@@ -22,6 +22,14 @@ export default function AskGemini() {
     const { history, addToHistory, clearHistory } = useChat();
     const { activeNote, updateNoteLocally } = useNotes();
 
+    const stripHtml = (html: string) => {
+        // Create a temporary div to handle HTML content
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+        // Get text content and normalize whitespace
+        return temp.textContent?.trim().replace(/\s+/g, ' ') || '';
+    };
+
     const handleSubmit = async (e?: FormEvent) => {
         e?.preventDefault();
         setIsLoading(true);
@@ -44,7 +52,7 @@ export default function AskGemini() {
             }
 
             const data = await res.json();
-            const response = data.message;
+            const response = stripHtml(data.message);
             
             // Add to history
             addToHistory({ prompt: question, response: response });
@@ -191,7 +199,7 @@ export default function AskGemini() {
                                     }
                                 }}
                             >
-                                <div dangerouslySetInnerHTML={{ __html: entry.response }} />
+                                <Text>{entry.response}</Text>
                             </Blockquote>
                         </Stack>
                     ))}
