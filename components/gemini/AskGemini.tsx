@@ -14,6 +14,7 @@ import React, {FormEvent, useState} from "react";
 import {notifications} from "@mantine/notifications";
 import {useNotes} from "@/context/NotesContext";
 import {useChat} from "@/context/ChatContext";
+import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 
 export default function AskGemini() {
     const [question, setQuestion] = useState("");
@@ -108,6 +109,11 @@ export default function AskGemini() {
         }
     }
 
+    const handleDragStart = (e: React.DragEvent<HTMLDivElement>, response: string) => {
+        e.dataTransfer.setData("text/plain", response);
+        e.dataTransfer.effectAllowed = "copy";
+    };
+
     return (
         <Stack
             gap="sm"
@@ -164,17 +170,25 @@ export default function AskGemini() {
                 <Stack gap="sm">
                     {history.map((entry, index) => (
                         <Stack key={index}>
-                            <Paper shadow="xs" p="xs" key={index}>
+                            <Paper shadow="xs" p="xs">
                                 <Text size="md" fw={300}>
                                     {entry.prompt}
                                 </Text>
                             </Paper>
                             <Blockquote
+                                draggable
+                                onDragStart={(e) => handleDragStart(e, entry.response)}
                                 style={{
                                     textAlign: 'left',
                                     padding: '8px',
                                     borderRadius: '8px',
                                     overflowWrap: 'anywhere',
+                                    cursor: 'grab',
+                                    backgroundColor: 'var(--mantine-color-blue-0)',
+                                    transition: 'background-color 0.2s',
+                                    ':hover': {
+                                        backgroundColor: 'var(--mantine-color-blue-1)',
+                                    }
                                 }}
                             >
                                 <div dangerouslySetInnerHTML={{ __html: entry.response }} />

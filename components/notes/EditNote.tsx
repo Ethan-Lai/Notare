@@ -220,6 +220,72 @@ export default function EditNote({ note }: EditNoteProps) {
         setIsLoadingAI(false);
     };
 
+    const handleDrop = async (e: React.DragEvent<HTMLTextAreaElement>) => {
+        e.preventDefault();
+        const droppedText = e.dataTransfer.getData("text/plain");
+        if (!droppedText) return;
+
+        setIsLoadingAI(true);
+        try {
+            // Get cursor position
+            const textarea = e.currentTarget;
+            const cursorPosition = textarea.selectionStart;
+            const beforeCursor = note.content.substring(0, cursorPosition);
+            const afterCursor = note.content.substring(cursorPosition);
+
+            // Ask AI for placement suggestion around the cursor position
+            const placementRes = await fetch('/api/assistant/ask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    question: "Given this note content and cursor position (marked by |), suggest the best way to insert new content. Only respond with: 'before-cursor' or 'after-cursor'.",
+                    context: `${beforeCursor}|${afterCursor}`
+                })
+            });
+
+            if (!placementRes.ok) {
+                throw new Error('Failed to get AI placement suggestion');
+            }
+
+            const placementData = await placementRes.json();
+            const placement = placementData.message.toLowerCase();
+
+            // Insert the content based on AI suggestion
+            let newContent;
+            if (placement.includes('before')) {
+                newContent = `${beforeCursor}\n${droppedText}\n${afterCursor}`;
+            } else {
+                newContent = `${beforeCursor}\n\n${droppedText}\n${afterCursor}`;
+            }
+
+            updateNoteLocally({ ...note, content: newContent });
+            setHasEdited(true);
+
+            notifications.show({
+                color: 'green',
+                title: 'Success',
+                message: 'Content has been inserted into your note.',
+                position: 'top-right'
+            });
+        } catch (error) {
+            console.error('Error handling drop:', error);
+            notifications.show({
+                color: 'red',
+                title: 'Error',
+                message: 'Failed to insert content.',
+                position: 'top-right'
+            });
+        }
+        setIsLoadingAI(false);
+    };
+
+    const handleDragOver = (e: React.DragEvent<HTMLTextAreaElement>) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "copy";
+    };
+
     return (
         <Stack p={0} gap={0} mt="sm">
             <Group justify="space-between">
@@ -280,6 +346,9 @@ export default function EditNote({ note }: EditNoteProps) {
                 placeholder="Start writing your note here..."
                 size="md"
                 variant="unstyled"
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                style={{ cursor: 'text' }}
             />
             
         </Stack>
