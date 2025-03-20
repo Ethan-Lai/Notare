@@ -22,14 +22,6 @@ export default function AskGemini() {
     const { history, addToHistory, clearHistory } = useChat();
     const { activeNote, updateNoteLocally } = useNotes();
 
-    const stripHtml = (html: string) => {
-        // Create a temporary div to handle HTML content
-        const temp = document.createElement('div');
-        temp.innerHTML = html;
-        // Get text content and normalize whitespace
-        return temp.textContent?.trim().replace(/\s+/g, ' ') || '';
-    };
-
     const handleSubmit = async (e?: FormEvent) => {
         e?.preventDefault();
         setIsLoading(true);
@@ -43,7 +35,8 @@ export default function AskGemini() {
             const res = await fetch('/api/assistant/ask', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Accept': 'text/plain'
                 },
                 body: JSON.stringify(body)
             });
@@ -52,7 +45,8 @@ export default function AskGemini() {
             }
 
             const data = await res.json();
-            const response = stripHtml(data.message);
+            // Remove any HTML tags but preserve whitespace
+            const response = data.message.replace(/<[^>]*>/g, '');
             
             // Add to history
             addToHistory({ prompt: question, response: response });
@@ -199,7 +193,7 @@ export default function AskGemini() {
                                     }
                                 }}
                             >
-                                <Text>{entry.response}</Text>
+                                <Text style={{ whiteSpace: 'pre-wrap' }}>{entry.response}</Text>
                             </Blockquote>
                         </Stack>
                     ))}
