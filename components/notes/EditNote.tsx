@@ -2,7 +2,7 @@ import {Group, NumberInput, Stack, Text, Textarea, TextInput, Button} from "@man
 import {useNotes} from "@/context/NotesContext";
 import {useDebouncedValue} from "@mantine/hooks";
 import {ChangeEvent, useEffect, useState} from "react";
-import {IconRefresh, IconTrash} from "@tabler/icons-react";
+import {IconRefresh, IconTrash, IconRobot} from "@tabler/icons-react";
 import {notifications} from "@mantine/notifications";
 
 export interface EditNoteProps {
@@ -13,6 +13,7 @@ export default function EditNote({ note }: EditNoteProps) {
     const { updateNoteLocally, updateNoteInDB, deleteNote, setActiveNoteId, closeNote} = useNotes();
     const [saving, setSaving] = useState(false);
     const [hasEdited, setHasEdited] = useState(false);
+    const [isLoadingAI, setIsLoadingAI] = useState(false);
     const TRASH_TAG = -1; 
 
     // Update note in DB automatically shortly after user has stopped typing
@@ -126,6 +127,76 @@ export default function EditNote({ note }: EditNoteProps) {
             }
       };
     
+    const handleAIResponse = async () => {
+        setIsLoadingAI(true);
+        try {
+            // Ask AI about where to insert the response
+            const placementRes = await fetch('/api/assistant/ask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    question: "Given this note content, where should I insert your response? Please analyze the content structure and suggest the best position (start, end, or after a specific section). Only respond with the position, no explanation needed.",
+                    context: note.content
+                })
+            });
+
+            if (!placementRes.ok) {
+                throw new Error('Failed to get AI placement suggestion');
+            }
+
+            const placementData = await placementRes.json();
+            const placement = placementData.message.toLowerCase();
+
+            // Get the actual AI response for the note content
+            const responseRes = await fetch('/api/assistant/ask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    question: "Please analyze this note and provide relevant insights, suggestions, or additional information. Keep the response concise and focused.",
+                    context: note.content
+                })
+            });
+
+            if (!responseRes.ok) {
+                throw new Error('Failed to get AI response');
+            }
+
+            const responseData = await responseRes.json();
+            const aiResponse = responseData.message;
+
+            // Determine where to insert the response
+            let newContent = note.content;
+            if (placement.includes('start')) {
+                newContent = `AI Response:\n${aiResponse}\n\n${note.content}`;
+            } else {
+                newContent = `${note.content}\n\nAI Response:\n${aiResponse}`;
+            }
+
+            // Update the note with the new content
+            updateNoteLocally({ ...note, content: newContent });
+            setHasEdited(true);
+
+            notifications.show({
+                color: 'green',
+                title: 'Success',
+                message: 'AI response has been inserted into your note.',
+                position: 'top-right'
+            });
+        } catch (error) {
+            console.error('Error getting AI response:', error);
+            notifications.show({
+                color: 'red',
+                title: 'Error',
+                message: 'Failed to get AI response.',
+                position: 'top-right'
+            });
+        }
+        setIsLoadingAI(false);
+    };
 
     return (
         <Stack p={0} gap={0} mt="sm">
@@ -146,14 +217,26 @@ export default function EditNote({ note }: EditNoteProps) {
                     <IconRefresh size={16} />
                     <Text size="sm" c="dimmed">Saving...</Text>
                 </Group>
-                <Button
-                    color="red"
-                    leftSection={<IconTrash size={16} />}
-                    onClick={handleDeleteNote}
-                    mt="md"
-                >
-                    Delete Note
-                </Button>
+
+                <Group>
+                    <Button
+                        color="blue"
+                        leftSection={<IconRobot size={16} />}
+                        onClick={handleAIResponse}
+                        loading={isLoadingAI}
+                        mt="md"
+                    >
+                        Insert AI Response
+                    </Button>
+                    <Button
+                        color="red"
+                        leftSection={<IconTrash size={16} />}
+                        onClick={handleDeleteNote}
+                        mt="md"
+                    >
+                        Delete Note
+                    </Button>
+                </Group>
             </Group>
 
             <TextInput
