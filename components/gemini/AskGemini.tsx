@@ -1,7 +1,10 @@
 import {
     Blockquote,
+    Button,
     Divider,
-    Paper, ScrollArea,
+    Group,
+    Paper, 
+    ScrollArea,
     Skeleton,
     Stack,
     Text,
@@ -67,6 +70,16 @@ export default function AskGemini() {
         }
     }
 
+    const clearHistory = () => {
+        setHistory([]);
+        notifications.show({
+            color: 'blue',
+            title: 'Success',
+            message: "Conversation history has been cleared.",
+            position: "top-right"
+        });
+    }
+
     return (
         <Stack
             gap="sm"
@@ -85,6 +98,22 @@ export default function AskGemini() {
                     aria-label="Ask Gemini"
                 />
             </form>
+
+            <Group justify="space-between">
+                {history.length > 0 && (
+                    <Button 
+                        variant="subtle" 
+                        color="gray" 
+                        size="xs" 
+                        onClick={clearHistory}
+                    >
+                        Clear History
+                    </Button>
+                )}
+                <Text size="sm">
+                    {history.length > 0 ? `${history.length} message${history.length > 1 ? 's' : ''}` : ''}
+                </Text>
+            </Group>
 
             <Divider />
 
