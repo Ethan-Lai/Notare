@@ -145,15 +145,17 @@ export default function EditNote({ note }: EditNoteProps) {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    question: `Given this note content, analyze where the following response would be most relevant to insert:
-                    Note content: "${note.content}"
-                    Response to insert: "${response}"
+                    question: `Analyze where to insert this response in the note content. Respond with either:
+                    - "start" for beginning of note
+                    - "end" for end of note
+                    - "after: [exact line]" to insert after a specific line
                     
-                    If you find a specific line that the response should follow, respond with "after: " followed by that line.
-                    If it should go at the start, respond with "start".
-                    If it should go at the end, respond with "end".
-                    Only respond with one of these formats, no explanation.`,
-                    context: response
+                    Note content:
+                    ${note.content}
+                    
+                    Response to insert:
+                    ${response}`,
+                    context: note.content
                 })
             });
 
@@ -162,16 +164,16 @@ export default function EditNote({ note }: EditNoteProps) {
             }
 
             const placementData = await placementRes.json();
-            const placement = placementData.message.toLowerCase();
+            const placement = placementData.message.toLowerCase().trim();
 
             // Insert the response based on more specific placement
             let newContent = note.content;
             if (placement === 'start') {
                 newContent = `${response}\n\n${note.content}`;
-            } else if (placement === 'end') {
+            } else if (placement === 'end' || !placement) {
                 newContent = `${note.content}\n\n${response}`;
-            } else if (placement.startsWith('after: ')) {
-                const targetLine = placement.substring(7);
+            } else if (placement.startsWith('after:')) {
+                const targetLine = placement.substring(6).trim();
                 const parts = note.content.split('\n');
                 let insertIndex = -1;
                 
@@ -185,15 +187,12 @@ export default function EditNote({ note }: EditNoteProps) {
 
                 if (insertIndex !== -1) {
                     // Insert after the found line
-                    parts.splice(insertIndex + 1, 0, '\n' + response);
+                    parts.splice(insertIndex + 1, 0, response);
                     newContent = parts.join('\n');
                 } else {
                     // Fallback to end if line not found
                     newContent = `${note.content}\n\n${response}`;
                 }
-            } else {
-                // Fallback to end if format not recognized
-                newContent = `${note.content}\n\n${response}`;
             }
 
             updateNoteLocally({ ...note, content: newContent });
