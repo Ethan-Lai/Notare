@@ -70,12 +70,15 @@ export default function AskGemini() {
                 const placementData = await placementRes.json();
                 const placement = placementData.message.toLowerCase();
 
+                // Use the current response for insertion
+                const contentToInsert = response;
+
                 // Insert the response
                 let newContent = activeNote.content;
                 if (placement.includes('start')) {
-                    newContent = `AI Response:\n${response}\n\n${activeNote.content}`;
+                    newContent = `${contentToInsert}\n\n${activeNote.content}`;
                 } else {
-                    newContent = `${activeNote.content}\n\nAI Response:\n${response}`;
+                    newContent = `${activeNote.content}\n\n${contentToInsert}`;
                 }
 
                 // Update the note
