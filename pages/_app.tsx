@@ -6,6 +6,7 @@ import {createTheme, MantineProvider, virtualColor} from "@mantine/core";
 import Head from "next/head";
 import {Notifications} from "@mantine/notifications";
 import { NotesProvider } from '../context/NotesContext'
+import { ChatProvider } from '../context/ChatContext'
 
 const theme = createTheme({
     primaryColor: "blue",
@@ -22,10 +23,12 @@ export default function App({ Component, pageProps }: AppProps) {
                 />
                 <link rel="shortcut icon" href="/favicon.ico" />
             </Head>
-            <NotesProvider>
-                <Notifications autoClose={1000} />
-                <Component {...pageProps} />
-            </NotesProvider>
+            <ChatProvider>
+                <NotesProvider>
+                    <Notifications autoClose={1000} />
+                    <Component {...pageProps} />
+                </NotesProvider>
+            </ChatProvider>
         </MantineProvider>
     );
 }

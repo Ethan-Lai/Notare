@@ -4,6 +4,7 @@ import {useDebouncedValue} from "@mantine/hooks";
 import {ChangeEvent, useEffect, useState} from "react";
 import {IconRefresh, IconTrash, IconRobot} from "@tabler/icons-react";
 import {notifications} from "@mantine/notifications";
+import {useChat} from "@/context/ChatContext";
 
 export interface EditNoteProps {
     note: Note;
@@ -11,6 +12,7 @@ export interface EditNoteProps {
 
 export default function EditNote({ note }: EditNoteProps) {
     const { updateNoteLocally, updateNoteInDB, deleteNote, setActiveNoteId, closeNote} = useNotes();
+    const { history } = useChat();
     const [saving, setSaving] = useState(false);
     const [hasEdited, setHasEdited] = useState(false);
     const [isLoadingAI, setIsLoadingAI] = useState(false);
@@ -130,6 +132,23 @@ export default function EditNote({ note }: EditNoteProps) {
     const handleAIResponse = async () => {
         setIsLoadingAI(true);
         try {
+            // First, check if there are any relevant responses in the chat history
+            const relevantEntries = history.filter(entry => 
+                entry.prompt.toLowerCase().includes(note.title.toLowerCase()) ||
+                note.content.toLowerCase().includes(entry.prompt.toLowerCase())
+            );
+
+            if (relevantEntries.length === 0) {
+                notifications.show({
+                    color: 'blue',
+                    title: 'No Relevant Responses',
+                    message: 'No relevant AI responses found in chat history. Try asking a question in the chat first.',
+                    position: 'top-right'
+                });
+                setIsLoadingAI(false);
+                return;
+            }
+
             // Ask AI about where to insert the response
             const placementRes = await fetch('/api/assistant/ask', {
                 method: 'POST',
@@ -149,31 +168,17 @@ export default function EditNote({ note }: EditNoteProps) {
             const placementData = await placementRes.json();
             const placement = placementData.message.toLowerCase();
 
-            // Get the actual AI response for the note content
-            const responseRes = await fetch('/api/assistant/ask', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    question: "Please analyze this note and provide relevant insights, suggestions, or additional information. Keep the response concise and focused.",
-                    context: note.content
-                })
-            });
-
-            if (!responseRes.ok) {
-                throw new Error('Failed to get AI response');
-            }
-
-            const responseData = await responseRes.json();
-            const aiResponse = responseData.message;
+            // Combine all relevant responses
+            const combinedResponse = relevantEntries
+                .map(entry => `Q: ${entry.prompt}\nA: ${entry.response}`)
+                .join('\n\n');
 
             // Determine where to insert the response
             let newContent = note.content;
             if (placement.includes('start')) {
-                newContent = `AI Response:\n${aiResponse}\n\n${note.content}`;
+                newContent = `AI Responses from Chat:\n${combinedResponse}\n\n${note.content}`;
             } else {
-                newContent = `${note.content}\n\nAI Response:\n${aiResponse}`;
+                newContent = `${note.content}\n\nAI Responses from Chat:\n${combinedResponse}`;
             }
 
             // Update the note with the new content
@@ -183,7 +188,7 @@ export default function EditNote({ note }: EditNoteProps) {
             notifications.show({
                 color: 'green',
                 title: 'Success',
-                message: 'AI response has been inserted into your note.',
+                message: 'AI responses from chat have been inserted into your note.',
                 position: 'top-right'
             });
         } catch (error) {

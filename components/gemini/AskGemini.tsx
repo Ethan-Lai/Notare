@@ -13,16 +13,12 @@ import {
 import React, {FormEvent, useState} from "react";
 import {notifications} from "@mantine/notifications";
 import {useNotes} from "@/context/NotesContext";
-
-type HistoryEntry = {
-    prompt: string;
-    response: string;
-}
+import {useChat} from "@/context/ChatContext";
 
 export default function AskGemini() {
     const [question, setQuestion] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const [history, setHistory] = useState<HistoryEntry[]>([]); // Contains only answered questions
+    const { history, addToHistory, clearHistory } = useChat();
 
     // Access active note (if existing) to provide as context
     const { activeNote } = useNotes();
@@ -45,10 +41,7 @@ export default function AskGemini() {
             }
 
             const data = await res.json();
-            setHistory([
-                { prompt: question, response: data.message },
-                ...history
-            ]);
+            addToHistory({ prompt: question, response: data.message });
             setQuestion("");
 
         } catch (err) {
@@ -68,16 +61,6 @@ export default function AskGemini() {
         if (e.key === "Enter" && !e.shiftKey) {
             await handleSubmit(e);
         }
-    }
-
-    const clearHistory = () => {
-        setHistory([]);
-        notifications.show({
-            color: 'blue',
-            title: 'Success',
-            message: "Conversation history has been cleared.",
-            position: "top-right"
-        });
     }
 
     return (
