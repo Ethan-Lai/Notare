@@ -27,10 +27,6 @@ export default function AskGemini() {
         setIsLoading(true);
 
         try {
-            // Check if this is a request to insert into note
-            const isInsertRequest = question.toLowerCase().includes('insert') && 
-                                  question.toLowerCase().includes('note');
-
             const body = { question: question, context: activeNote?.content };
             const res = await fetch('/api/assistant/ask', {
                 method: 'POST',
@@ -49,47 +45,92 @@ export default function AskGemini() {
             // Add to history
             addToHistory({ prompt: question, response: response });
 
-            // If this was an insert request and we have an active note, insert the response
-            if (isInsertRequest && activeNote) {
-                // Get placement suggestion
-                const placementRes = await fetch('/api/assistant/ask', {
+            // Ask AI if this is a request to insert into note
+            if (activeNote) {
+                const insertCheckRes = await fetch('/api/assistant/ask', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        question: "Given this note content, where should I insert your response? Please analyze the content structure and suggest the best position (start, end, or after a specific section). Only respond with the position, no explanation needed.",
-                        context: activeNote.content
+                        question: "Is the user asking to insert or add this response into their note? Only respond with 'yes' or 'no'.",
+                        context: `User's question: ${question}\n\nAI Response: ${response}`
                     })
                 });
 
-                if (!placementRes.ok) {
-                    throw new Error('Failed to get AI placement suggestion');
+                if (!insertCheckRes.ok) {
+                    throw new Error('Failed to check if response should be inserted');
                 }
 
-                const placementData = await placementRes.json();
-                const placement = placementData.message.toLowerCase();
+                const insertCheckData = await insertCheckRes.json();
+                const shouldInsert = insertCheckData.message.toLowerCase().includes('yes');
 
-                // Use the current response for insertion
-                const contentToInsert = response;
+                if (shouldInsert) {
+                    // Split the note content into lines
+                    const lines = activeNote.content.split('\n');
+                    let insertionIndex = -1;
 
-                // Insert the response
-                let newContent = activeNote.content;
-                if (placement.includes('start')) {
-                    newContent = `${contentToInsert}\n\n${activeNote.content}`;
-                } else {
-                    newContent = `${activeNote.content}\n\n${contentToInsert}`;
+                    // First, get context about the note content and the AI response
+                    const contextRes = await fetch('/api/assistant/ask', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            question: "Given this note content and AI response, analyze where the response would fit best contextually. Consider the question that was asked and its relationship to the surrounding content. Only suggest placement after the most relevant question or section.",
+                            context: `Note content:\n${activeNote.content}\n\nAI Response:\n${response}\n\nOriginal Question:\n${question}`
+                        })
+                    });
+
+                    if (!contextRes.ok) {
+                        throw new Error('Failed to get AI context analysis');
+                    }
+
+                    // Now go through each line and ask if the response should be inserted after it
+                    for (let i = 0; i < lines.length; i++) {
+                        const line = lines[i];
+                        const placementRes = await fetch('/api/assistant/ask', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                question: "Given this line of text, the AI response, and the original question, should the response be inserted after this line? Only respond with 'yes' or 'no'. Consider the context and relevance to the original question.",
+                                context: `Line: "${line}"\n\nAI Response:\n${response}\n\nOriginal Question:\n${question}`
+                            })
+                        });
+
+                        if (!placementRes.ok) {
+                            throw new Error('Failed to get AI placement suggestion');
+                        }
+
+                        const placementData = await placementRes.json();
+                        if (placementData.message.toLowerCase().includes('yes')) {
+                            insertionIndex = i;
+                            break;
+                        }
+                    }
+
+                    // If no specific insertion point was found, append to the end
+                    if (insertionIndex === -1) {
+                        insertionIndex = lines.length - 1;
+                    }
+
+                    // Insert the response at the determined position
+                    const newContent = lines.slice(0, insertionIndex + 1).join('\n') + 
+                                     '\n\n' + response + 
+                                     '\n' + lines.slice(insertionIndex + 1).join('\n');
+
+                    // Update the note
+                    updateNoteLocally({ ...activeNote, content: newContent });
+
+                    notifications.show({
+                        color: 'green',
+                        title: 'Success',
+                        message: 'AI response has been inserted into your note.',
+                        position: 'top-right'
+                    });
                 }
-
-                // Update the note
-                updateNoteLocally({ ...activeNote, content: newContent });
-
-                notifications.show({
-                    color: 'green',
-                    title: 'Success',
-                    message: 'AI response has been inserted into your note.',
-                    position: 'top-right'
-                });
             }
 
             setQuestion("");
@@ -194,7 +235,7 @@ export default function AskGemini() {
                                     }
                                 }}
                             >
-                                <div dangerouslySetInnerHTML={{ __html: entry.response }} />
+                                <Text>{entry.response}</Text>
                             </Blockquote>
                         </Stack>
                     ))}
