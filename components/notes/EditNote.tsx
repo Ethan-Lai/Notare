@@ -1,4 +1,4 @@
-import {Group, NumberInput, Stack, Text, Textarea, TextInput, Button} from "@mantine/core";
+import {Group, Select, Stack, Text, Textarea, TextInput, Button} from "@mantine/core";
 import {useNotes} from "@/context/NotesContext";
 import {useDebouncedValue} from "@mantine/hooks";
 import {ChangeEvent, useEffect, useState} from "react";
@@ -11,7 +11,7 @@ export interface EditNoteProps {
 }
 
 export default function EditNote({ note }: EditNoteProps) {
-    const { updateNoteLocally, updateNoteInDB, deleteNote, setActiveNoteId, closeNote} = useNotes();
+    const { updateNoteLocally, updateNoteInDB, deleteNote, setActiveNoteId, closeNote, notes } = useNotes();
     const { history } = useChat();
     const [saving, setSaving] = useState(false);
     const [hasEdited, setHasEdited] = useState(false);
@@ -22,6 +22,9 @@ export default function EditNote({ note }: EditNoteProps) {
     const [debouncedTitle] = useDebouncedValue(note.title, 500);
     const [debouncedContent] = useDebouncedValue(note.content, 500);
     const [debouncedTag] = useDebouncedValue(note.tag, 500);
+
+    // Get unique tags from all notes
+    const availableTags = [...new Set(notes.map(n => n.tag))].sort((a, b) => a - b);
 
     useEffect(() => {
         // Prevent API update call on initial load
@@ -58,8 +61,8 @@ export default function EditNote({ note }: EditNoteProps) {
         setHasEdited(true);
     }
 
-    const handleTagChange = (val: string | number) => {
-        const newTag = typeof val === "number" ? val : (parseInt(val) || 0);
+    const handleTagChange = (val: string | null) => {
+        const newTag = val ? parseInt(val) : 0;
         updateNoteLocally({ ...note, tag: newTag });
         setHasEdited(true);
     }
@@ -261,14 +264,12 @@ export default function EditNote({ note }: EditNoteProps) {
     return (
         <Stack p={0} gap={0} mt="sm">
             <Group justify="space-between">
-                <NumberInput
-                    variant="filled"
-                    value={note.tag}
-                    onChange={handleTagChange}
-                    allowNegative={false}
+                <Select
                     label="Tag"
-                    placeholder="Tag Number"
-                    allowDecimal={false}
+                    placeholder="Select a tag"
+                    value={note.tag.toString()}
+                    onChange={handleTagChange}
+                    data={availableTags.map(tag => ({ value: tag.toString(), label: `Tag ${tag}` }))}
                     maw={200}
                     size="xs"
                 />
