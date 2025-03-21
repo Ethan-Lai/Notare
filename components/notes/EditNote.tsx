@@ -2,8 +2,9 @@ import {Group, NumberInput, Stack, Text, Textarea, TextInput, Button} from "@man
 import {useNotes} from "@/context/NotesContext";
 import {useDebouncedValue} from "@mantine/hooks";
 import {ChangeEvent, useEffect, useState} from "react";
-import {IconRefresh, IconTrash} from "@tabler/icons-react";
+import {IconRefresh, IconTrash, IconRobot} from "@tabler/icons-react";
 import {notifications} from "@mantine/notifications";
+import {useChat} from "@/context/ChatContext";
 
 export interface EditNoteProps {
     note: Note;
@@ -11,8 +12,10 @@ export interface EditNoteProps {
 
 export default function EditNote({ note }: EditNoteProps) {
     const { updateNoteLocally, updateNoteInDB, deleteNote, setActiveNoteId, closeNote} = useNotes();
+    const { history } = useChat();
     const [saving, setSaving] = useState(false);
     const [hasEdited, setHasEdited] = useState(false);
+    const [isLoadingAI, setIsLoadingAI] = useState(false);
     const TRASH_TAG = -1; 
 
     // Update note in DB automatically shortly after user has stopped typing
@@ -126,6 +129,134 @@ export default function EditNote({ note }: EditNoteProps) {
             }
       };
     
+    const handleAIResponse = async () => {
+        setIsLoadingAI(true);
+        try {
+            // Get the most recent response from chat history (it's at index 0 since entries are prepended)
+            const mostRecentEntry = history[0];
+            if (!mostRecentEntry) {
+                notifications.show({
+                    color: 'yellow',
+                    title: 'No Response Available',
+                    message: 'Please ask a question first to get an AI response.',
+                    position: 'top-right'
+                });
+                return;
+            }
+
+            // Get placement suggestion for the most recent response
+            const placementRes = await fetch('/api/assistant/ask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    question: "Given this note content, suggest where to insert new content. Only respond with: 'start' or 'end'.",
+                    context: note.content
+                })
+            });
+
+            if (!placementRes.ok) {
+                throw new Error('Failed to get AI placement suggestion');
+            }
+
+            const placementData = await placementRes.json();
+            const placement = placementData.message.toLowerCase();
+
+            // Insert just the raw response without any formatting
+            let newContent;
+            if (placement.includes('start')) {
+                newContent = note.content ? `${mostRecentEntry.response}\n\n${note.content}` : mostRecentEntry.response;
+            } else {
+                newContent = note.content ? `${note.content}\n\n${mostRecentEntry.response}` : mostRecentEntry.response;
+            }
+
+            updateNoteLocally({ ...note, content: newContent });
+            setHasEdited(true);
+
+            notifications.show({
+                color: 'green',
+                title: 'Success',
+                message: 'AI response has been inserted into your note.',
+                position: 'top-right'
+            });
+        } catch (error) {
+            console.error('Error inserting AI response:', error);
+            notifications.show({
+                color: 'red',
+                title: 'Error',
+                message: 'Failed to insert AI response.',
+                position: 'top-right'
+            });
+        }
+        setIsLoadingAI(false);
+    };
+
+    const handleDrop = async (e: React.DragEvent<HTMLTextAreaElement>) => {
+        e.preventDefault();
+        const droppedText = e.dataTransfer.getData("text/plain");
+        if (!droppedText) return;
+
+        setIsLoadingAI(true);
+        try {
+            // Get cursor position
+            const textarea = e.currentTarget;
+            const cursorPosition = textarea.selectionStart;
+            const beforeCursor = note.content.substring(0, cursorPosition);
+            const afterCursor = note.content.substring(cursorPosition);
+
+            // Ask AI for placement suggestion around the cursor position
+            const placementRes = await fetch('/api/assistant/ask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    question: "Given this note content and cursor position (marked by |), suggest the best way to insert new content. Only respond with: 'before-cursor' or 'after-cursor'.",
+                    context: `${beforeCursor}|${afterCursor}`
+                })
+            });
+
+            if (!placementRes.ok) {
+                throw new Error('Failed to get AI placement suggestion');
+            }
+
+            const placementData = await placementRes.json();
+            const placement = placementData.message.toLowerCase();
+
+            // Insert the content based on AI suggestion
+            let newContent;
+            if (placement.includes('before')) {
+                newContent = `${beforeCursor}\n${droppedText}\n${afterCursor}`;
+            } else {
+                newContent = `${beforeCursor}\n\n${droppedText}\n${afterCursor}`;
+            }
+
+            updateNoteLocally({ ...note, content: newContent });
+            setHasEdited(true);
+
+            notifications.show({
+                color: 'green',
+                title: 'Success',
+                message: 'Content has been inserted into your note.',
+                position: 'top-right'
+            });
+        } catch (error) {
+            console.error('Error handling drop:', error);
+            notifications.show({
+                color: 'red',
+                title: 'Error',
+                message: 'Failed to insert content.',
+                position: 'top-right'
+            });
+        }
+        setIsLoadingAI(false);
+    };
+
+    const handleDragOver = (e: React.DragEvent<HTMLTextAreaElement>) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "copy";
+    };
 
     return (
         <Stack p={0} gap={0} mt="sm">
@@ -146,14 +277,28 @@ export default function EditNote({ note }: EditNoteProps) {
                     <IconRefresh size={16} />
                     <Text size="sm" c="dimmed">Saving...</Text>
                 </Group>
-                <Button
-                    color="red"
-                    leftSection={<IconTrash size={16} />}
-                    onClick={handleDeleteNote}
-                    mt="md"
-                >
-                    Delete Note
-                </Button>
+
+                <Group>
+                    {history.length > 0 && (
+                        <Button
+                            color="blue"
+                            leftSection={<IconRobot size={16} />}
+                            onClick={handleAIResponse}
+                            loading={isLoadingAI}
+                            mt="md"
+                        >
+                            Insert AI Response
+                        </Button>
+                    )}
+                    <Button
+                        color="red"
+                        leftSection={<IconTrash size={16} />}
+                        onClick={handleDeleteNote}
+                        mt="md"
+                    >
+                        Delete Note
+                    </Button>
+                </Group>
             </Group>
 
             <TextInput
@@ -173,6 +318,9 @@ export default function EditNote({ note }: EditNoteProps) {
                 placeholder="Start writing your note here..."
                 size="md"
                 variant="unstyled"
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                style={{ cursor: 'text' }}
             />
             
         </Stack>

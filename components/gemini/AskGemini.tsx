@@ -13,25 +13,24 @@ import {
 import React, {FormEvent, useState} from "react";
 import {notifications} from "@mantine/notifications";
 import {useNotes} from "@/context/NotesContext";
-
-type HistoryEntry = {
-    prompt: string;
-    response: string;
-}
+import {useChat} from "@/context/ChatContext";
+import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 
 export default function AskGemini() {
     const [question, setQuestion] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const [history, setHistory] = useState<HistoryEntry[]>([]); // Contains only answered questions
-
-    // Access active note (if existing) to provide as context
-    const { activeNote } = useNotes();
+    const { history, addToHistory, clearHistory } = useChat();
+    const { activeNote, updateNoteLocally } = useNotes();
 
     const handleSubmit = async (e?: FormEvent) => {
         e?.preventDefault();
         setIsLoading(true);
 
         try {
+            // Check if this is a request to insert into note
+            const isInsertRequest = question.toLowerCase().includes('insert') && 
+                                  question.toLowerCase().includes('note');
+
             const body = { question: question, context: activeNote?.content };
             const res = await fetch('/api/assistant/ask', {
                 method: 'POST',
@@ -45,19 +44,62 @@ export default function AskGemini() {
             }
 
             const data = await res.json();
-            setHistory([
-                { prompt: question, response: data.message },
-                ...history
-            ]);
-            setQuestion("");
+            const response = data.message;
+            
+            // Add to history
+            addToHistory({ prompt: question, response: response });
 
+            // If this was an insert request and we have an active note, insert the response
+            if (isInsertRequest && activeNote) {
+                // Get placement suggestion
+                const placementRes = await fetch('/api/assistant/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        question: "Given this note content, where should I insert your response? Please analyze the content structure and suggest the best position (start, end, or after a specific section). Only respond with the position, no explanation needed.",
+                        context: activeNote.content
+                    })
+                });
+
+                if (!placementRes.ok) {
+                    throw new Error('Failed to get AI placement suggestion');
+                }
+
+                const placementData = await placementRes.json();
+                const placement = placementData.message.toLowerCase();
+
+                // Use the current response for insertion
+                const contentToInsert = response;
+
+                // Insert the response
+                let newContent = activeNote.content;
+                if (placement.includes('start')) {
+                    newContent = `${contentToInsert}\n\n${activeNote.content}`;
+                } else {
+                    newContent = `${activeNote.content}\n\n${contentToInsert}`;
+                }
+
+                // Update the note
+                updateNoteLocally({ ...activeNote, content: newContent });
+
+                notifications.show({
+                    color: 'green',
+                    title: 'Success',
+                    message: 'AI response has been inserted into your note.',
+                    position: 'top-right'
+                });
+            }
+
+            setQuestion("");
         } catch (err) {
             console.error(err);
             notifications.show({
                 color: 'red',
                 title: 'Error',
                 message: "Sorry, something went wrong.",
-                position: "top-right"
+                position: 'top-right'
             });
         }
 
@@ -70,15 +112,10 @@ export default function AskGemini() {
         }
     }
 
-    const clearHistory = () => {
-        setHistory([]);
-        notifications.show({
-            color: 'blue',
-            title: 'Success',
-            message: "Conversation history has been cleared.",
-            position: "top-right"
-        });
-    }
+    const handleDragStart = (e: React.DragEvent<HTMLDivElement>, response: string) => {
+        e.dataTransfer.setData("text/plain", response);
+        e.dataTransfer.effectAllowed = "copy";
+    };
 
     return (
         <Stack
@@ -94,9 +131,15 @@ export default function AskGemini() {
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
                     onKeyDown={(e) => handleKeyDown(e)}
-                    placeholder="Ask Gemini"
+                    placeholder={activeNote ? "Ask Gemini" : "Select a note to ask questions"}
                     aria-label="Ask Gemini"
+                    disabled={!activeNote}
                 />
+                {!activeNote && (
+                    <Text size="sm" c="dimmed" mt="xs">
+                        Please select or create a note to start asking questions
+                    </Text>
+                )}
             </form>
 
             <Group justify="space-between">
@@ -130,17 +173,25 @@ export default function AskGemini() {
                 <Stack gap="sm">
                     {history.map((entry, index) => (
                         <Stack key={index}>
-                            <Paper shadow="xs" p="xs" key={index}>
+                            <Paper shadow="xs" p="xs">
                                 <Text size="md" fw={300}>
                                     {entry.prompt}
                                 </Text>
                             </Paper>
                             <Blockquote
+                                draggable
+                                onDragStart={(e) => handleDragStart(e, entry.response)}
                                 style={{
                                     textAlign: 'left',
                                     padding: '8px',
                                     borderRadius: '8px',
                                     overflowWrap: 'anywhere',
+                                    cursor: 'grab',
+                                    backgroundColor: 'var(--mantine-color-default-filled)',
+                                    transition: 'background-color 0.2s',
+                                    ':hover': {
+                                        backgroundColor: 'var(--mantine-color-default-filled-hover)',
+                                    }
                                 }}
                             >
                                 <div dangerouslySetInnerHTML={{ __html: entry.response }} />
