@@ -4,6 +4,7 @@ const NotesContext = createContext();
 
 export function NotesProvider({ children }) {
     const [notes, setNotes] = useState([]);
+    const [tags, setTags] = useState([]);
     const [initialLoad, setInitialLoad] = useState(true);
     const [activeNoteId, setActiveNoteId] = useState(null);
     const [openedNotesIds, setOpenedNoteIds] = useState([]);
@@ -20,6 +21,9 @@ export function NotesProvider({ children }) {
                 const data = await response.json();
                 console.log("Backend response:", data);
                 setNotes(data);
+                // Extract unique tags from notes
+                const uniqueTags = [...new Set(data.map(note => note.tag))].filter(tag => tag !== -1).sort((a, b) => a - b);
+                setTags(uniqueTags);
             }
         } catch (error) {
             console.error('Error fetching notes:', error);
@@ -42,6 +46,26 @@ export function NotesProvider({ children }) {
             return newNote;
         }
         throw new Error('Failed to create note');
+    };
+
+    const createTag = async () => {
+        try {
+            const userId = localStorage.getItem('userId');
+            if (!userId) {
+                throw new Error('User not logged in');
+            }
+
+            // Find the highest existing tag number
+            const maxTag = Math.max(...tags, 0);
+            const newTag = maxTag + 1;
+
+            // Add the new tag to the state
+            setTags(prevTags => [...prevTags, newTag].sort((a, b) => a - b));
+            return newTag;
+        } catch (error) {
+            console.error('Error creating tag:', error);
+            throw error;
+        }
     };
 
     /** Opens a note as the active note and adds it to the list of opened notes **/
@@ -139,7 +163,9 @@ export function NotesProvider({ children }) {
         <NotesContext.Provider value={{
             initialLoad,
             notes,
+            tags,
             createNote,
+            createTag,
             updateNoteLocally,
             updateNoteInDB,
             fetchNotes,

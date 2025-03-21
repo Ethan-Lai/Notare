@@ -15,14 +15,28 @@ export default function NotePreview(props: NotePreviewProps) {
     // NOTE: Currently displays when it was created, should probably change this to when it was last edited later
     const timeString = getRelativeTimeString(new Date(note.createdAt), navigator.language);
 
+    const handleDragStart = (e: React.DragEvent) => {
+        e.dataTransfer.setData('noteId', note.id.toString());
+        e.dataTransfer.effectAllowed = 'move';
+    };
+
+    const handleClick = (e: React.MouseEvent) => {
+        // Prevent opening the note if we're dragging
+        if (e.detail === 1) {
+            openNote(note.id);
+        }
+    };
+
     return (
         <Card
             shadow="sm"
             padding="md"
             withBorder
             h={height}
-            style={{ cursor: "pointer" }}
-            onClick={() => openNote(note.id)}
+            style={{ cursor: "grab" }}
+            onClick={handleClick}
+            draggable
+            onDragStart={handleDragStart}
         >
             <Stack gap={4} flex={1}>
                 <Flex justify="space-between" gap="xs">
@@ -41,5 +55,5 @@ export default function NotePreview(props: NotePreviewProps) {
                 </Text>
             </Card.Section>
         </Card>
-      );
-    }
+    );
+}
