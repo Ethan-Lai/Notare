@@ -162,7 +162,7 @@ export function NoteUpload() {
                             overflowWrap: 'anywhere',
                         }}
                     >
-                        <div dangerouslySetInnerHTML={{ __html: response }} />
+                        <Text>{response}</Text>
                     </Blockquote>
                 )}
             </ScrollArea>

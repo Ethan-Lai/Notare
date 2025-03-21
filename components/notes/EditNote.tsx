@@ -135,7 +135,7 @@ export default function EditNote({ note }: EditNoteProps) {
     const handleAIResponse = async () => {
         setIsLoadingAI(true);
         try {
-            // Get the most recent response from chat history (it's at index 0 since entries are prepended)
+            // Get the most recent response from chat history
             const mostRecentEntry = history[0];
             if (!mostRecentEntry) {
                 notifications.show({
@@ -147,32 +147,60 @@ export default function EditNote({ note }: EditNoteProps) {
                 return;
             }
 
-            // Get placement suggestion for the most recent response
-            const placementRes = await fetch('/api/assistant/ask', {
+            // Split the note content into lines
+            const lines = note.content.split('\n');
+            let insertionIndex = -1;
+
+            // First, get context about the note content and the AI response
+            const contextRes = await fetch('/api/assistant/ask', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    question: "Given this note content, suggest where to insert new content. Only respond with: 'start' or 'end'.",
-                    context: note.content
+                    question: "Given this note content and AI response, analyze where the response would fit best contextually. Consider the question that was asked and its relationship to the surrounding content. Only suggest placement after the most relevant question or section.",
+                    context: `Note content:\n${note.content}\n\nAI Response:\n${mostRecentEntry.response}\n\nOriginal Question:\n${mostRecentEntry.prompt}`
                 })
             });
 
-            if (!placementRes.ok) {
-                throw new Error('Failed to get AI placement suggestion');
+            if (!contextRes.ok) {
+                throw new Error('Failed to get AI context analysis');
             }
 
-            const placementData = await placementRes.json();
-            const placement = placementData.message.toLowerCase();
+            // Now go through each line and ask if the response should be inserted after it
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                const placementRes = await fetch('/api/assistant/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        question: "Given this line of text, the AI response, and the original question, should the response be inserted after this line? Only respond with 'yes' or 'no'. Consider the context and relevance to the original question.",
+                        context: `Line: "${line}"\n\nAI Response:\n${mostRecentEntry.response}\n\nOriginal Question:\n${mostRecentEntry.prompt}`
+                    })
+                });
 
-            // Insert just the raw response without any formatting
-            let newContent;
-            if (placement.includes('start')) {
-                newContent = note.content ? `${mostRecentEntry.response}\n\n${note.content}` : mostRecentEntry.response;
-            } else {
-                newContent = note.content ? `${note.content}\n\n${mostRecentEntry.response}` : mostRecentEntry.response;
+                if (!placementRes.ok) {
+                    throw new Error('Failed to get AI placement suggestion');
+                }
+
+                const placementData = await placementRes.json();
+                if (placementData.message.toLowerCase().includes('yes')) {
+                    insertionIndex = i;
+                    break;
+                }
             }
+
+            // If no specific insertion point was found, append to the end
+            if (insertionIndex === -1) {
+                insertionIndex = lines.length - 1;
+            }
+
+            // Insert the response at the determined position
+            const newContent = lines.slice(0, insertionIndex + 1).join('\n') + 
+                             '\n\n' + mostRecentEntry.response + 
+                             '\n' + lines.slice(insertionIndex + 1).join('\n');
 
             updateNoteLocally({ ...note, content: newContent });
             setHasEdited(true);
@@ -215,8 +243,8 @@ export default function EditNote({ note }: EditNoteProps) {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    question: "Given this note content and cursor position (marked by |), suggest the best way to insert new content. Only respond with: 'before-cursor' or 'after-cursor'.",
-                    context: `${beforeCursor}|${afterCursor}`
+                    question: "Given this note content and cursor position (marked by |), analyze where the new content should be inserted. Consider the context and relevance to surrounding questions. Only respond with: 'before-cursor' or 'after-cursor'.",
+                    context: `Note content before cursor:\n${beforeCursor}\n\nNote content after cursor:\n${afterCursor}\n\nContent to insert:\n${droppedText}`
                 })
             });
 
