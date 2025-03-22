@@ -1,10 +1,12 @@
 import { PrismaClient } from '@prisma/client';
+import withAuth from "../../../lib/withAuth";
 
 const prisma = new PrismaClient();
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method === 'PUT') {
     try {
+      // NOTE: Need to check whether user owns note
       const { id, title, content, tag } = req.body;
 
       if (!id) {
@@ -25,3 +27,4 @@ export default async function handler(req, res) {
   }
 }
 
+export default withAuth(handler);

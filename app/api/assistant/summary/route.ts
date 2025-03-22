@@ -1,7 +1,16 @@
 import { NextResponse } from "next/server";
 import { getAIService } from "@/services/ai/AIServiceFactory";
+import {getIronSession} from "iron-session";
+import {SessionData, sessionOptions} from "@/lib/lib";
+import {cookies} from "next/headers";
 
 export async function POST(req: Request) {
+    // Verify user is logged in
+    const session = await getIronSession<SessionData>(await cookies(), sessionOptions);
+    if (!session.isLoggedIn) {
+        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     if (!req.headers.get("Content-Type")?.includes("multipart/form-data")) {
         return NextResponse.json({ message: "Content-Type must be multipart/form-data" }, { status: 400 });
     }
