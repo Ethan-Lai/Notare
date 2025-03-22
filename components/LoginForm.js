@@ -19,7 +19,7 @@ const LoginForm = () => {
       alert('Please fill in either username or email.');
       return;
     }
-    const response = await fetch("/api/authentication/validateAccount", {
+    const response = await fetch("/api/auth/login", {
       method: "post",
       headers: {
         'Content-Type': 'application/json'
@@ -31,25 +31,13 @@ const LoginForm = () => {
       })
     });
   
-    const data = await response.json();
-  
-    if (response.status == 404) {
-      alert('Email does not exist.');
-    } else if (response.status == 401) {
-      alert('Wrong password/username.');
-    } else if (!response.ok){
-      alert('Bad!')
+    if (response.ok) {
+      router.push('/');
+      fetchNotes();
     } else {
-      if (data && data.user && data.user.id) {
-        localStorage.setItem('userId', data.user.id);
-        console.log('Saved userId to localStorage:', localStorage.getItem('userId'));
-        alert('Success!');
-        router.push('/');
-        fetchNotes();
-      } else {
-        console.error('No user ID found in response');
-        alert('Login error: No user ID received');
-      }
+      const resBody = await response.json();
+      const message = resBody["message"];
+      alert(message);
     }
   };
 
