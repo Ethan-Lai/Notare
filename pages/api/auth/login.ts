@@ -11,26 +11,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(405).json({ message: "Method not allowed" });
     }
 
-    // Check if any of email/username + password are missing or of invalid type
-    const { username, email, password } = req.body;
-    if ((!username && !email) || !password) {
+    // Verify all fields provided and of valid type
+    const { identifier, password } = req.body;
+    if (!identifier || !password) {
         return res.status(400).json({ message: "You must provide your username/email and password." });
-    } else if (username && typeof username !== "string") {
+    } else if (identifier && typeof identifier !== "string") {
         return res.status(400).json({ message: "Username must be a string" });
-    } else if (email && typeof email !== "string") {
-        return res.status(400).json({ message: "Email must be a string" });
     } else if (password && typeof password !== "string") {
         return res.status(400).json({ message: "Password must be a string" });
     }
 
     // Check if user exists
     try {
-        let user: User | null = null;
-        if (email) {
-            user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
-        } else if (username) {
-            user = await prisma.user.findUnique({ where: { name: username.toLowerCase() } });
-        }
+        const user: User | null = await prisma.user.findFirst({
+            where: {
+                OR: [{ name: identifier }, { email: identifier }]
+            }
+        });
 
         // If no existing user found, return 400 error
         if (!user) {
@@ -49,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         session.userId = user.id;
         await session.save();
 
-        return res.status(200).json({ message: "Login Successful" });
+        return res.status(200).json({ userId: session.userId, username: session.username, isLoggedIn: true });
 
     } catch (e) {
         console.error(e);
