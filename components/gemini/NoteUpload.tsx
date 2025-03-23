@@ -44,14 +44,6 @@ export function NoteUpload() {
     const uploadFile = async () => {
         if (!file) return;
 
-        // Verify user is logged in
-        const userId = localStorage.getItem("userId");
-        if (!userId) {
-            alert('Please log in to upload notes');
-            await router.push('/login');  // Redirect to login if no user ID
-            return;
-        }
-
         setUploading(true);
         try {
             // Create new note from uploaded file
@@ -62,7 +54,6 @@ export function NoteUpload() {
                     title: noteName,
                     content: fileContent,
                     tag: tag,
-                    authorId: parseInt(userId)
                 });
             }
 

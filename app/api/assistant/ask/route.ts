@@ -1,6 +1,9 @@
 import { getAIService } from '@/services/ai/AIServiceFactory';
 import { IAIService } from '@/services/ai/IAIService';
 import {NextResponse} from "next/server";
+import {getIronSession} from "iron-session";
+import {SessionData, sessionOptions} from "@/lib/lib";
+import {cookies} from "next/headers";
 
 interface ReqBody {
     question: string;
@@ -11,6 +14,13 @@ interface ReqBody {
  * Handler for API route to ask the AI a general question without any context.
  */
 export async function POST(req: Request) {
+    // Verify user is logged in
+    const session = await getIronSession<SessionData>(await cookies(), sessionOptions);
+    if (!session.isLoggedIn) {
+        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+
     // Verify JSON body is provided
     let body: ReqBody;
     try {

@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import {useAuth} from "@/context/AuthContext";
 
 const NotesContext = createContext();
 
@@ -13,10 +14,11 @@ export function NotesProvider({ children }) {
     const activeNote = (notes.length && activeNoteId) ? notes.find((note) => note.id === activeNoteId) : null;
     const openedNotes = openedNotesIds.map(id => notes.find((note) => note.id === id)).filter(Boolean);
 
+    const { user } = useAuth();
+
     const fetchNotes = async () => {
         try {
-            const userId = localStorage.getItem('userId');
-            const response = await fetch(`/api/notes/getAll?userId=${userId}`);
+            const response = await fetch(`/api/notes/getAll`);
             if (response.ok) {
                 const data = await response.json();
                 console.log("Backend response:", data);
@@ -50,8 +52,7 @@ export function NotesProvider({ children }) {
 
     const createTag = async () => {
         try {
-            const userId = localStorage.getItem('userId');
-            if (!userId) {
+            if (!user.isLoggedIn) {
                 throw new Error('User not logged in');
             }
 

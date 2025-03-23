@@ -5,10 +5,12 @@ import { useNotes } from "@/context/NotesContext";
 import { useState } from "react";
 import { useRouter } from "next/router";
 import { notifications } from "@mantine/notifications";
+import {useAuth} from "@/context/AuthContext";
 
 export default function NotesOverview() {
   const { notes, initialLoad, createNote, openNote }: { notes: Note[]; initialLoad: boolean; createNote: Function; openNote: Function } = useNotes();
   const [searchQuery, setSearchQuery] = useState("");
+  const { user } = useAuth();
   const router = useRouter();
 
   // Sizing setup
@@ -31,8 +33,7 @@ export default function NotesOverview() {
 
   const handleCreateNote = async () => {
     // Verify user is logged in
-    const userId = localStorage.getItem('userId');
-    if (!userId) {
+    if (!user.isLoggedIn) {
       alert('Please log in to create notes');
       router.push('/login');  // Redirect to login if no user ID
       return;
@@ -56,7 +57,6 @@ export default function NotesOverview() {
         title: '',
         content: '',
         tag: existingTags[0], // Use the first available tag
-        authorId: parseInt(userId, 10),
         canDelete: false
       });
       openNote(createdNote.id);

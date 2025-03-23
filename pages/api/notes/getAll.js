@@ -1,19 +1,16 @@
 import { PrismaClient } from '@prisma/client';
+import withAuth from "../../../lib/withAuth";
 
 const prisma = new PrismaClient();
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method === 'GET') {
     try {
-      const { userId } = req.query;
-
-      if (!userId) {
-        return res.status(400).json({ error: 'Author ID is required' });
-      }
-
+      // Extract userId from session and fetch notes
+      const userId = req.userId;
       const notes = await prisma.note.findMany({
         where: {
-          authorId: parseInt(userId)
+          authorId: userId
         },
       });
 
@@ -26,3 +23,4 @@ export default async function handler(req, res) {
   }
 }
 
+export default withAuth(handler);

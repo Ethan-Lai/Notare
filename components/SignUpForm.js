@@ -15,7 +15,7 @@ const SignUpForm = () => {
       return;
     }
 
-    const response = await fetch("/api/authentication/createAccount", {
+    const response = await fetch("/api/auth/signup", {
       method: "post",
       headers: {
         'Content-Type': 'application/json'
@@ -26,13 +26,13 @@ const SignUpForm = () => {
         password: password
       })
     });
-  
-    if (response.status == 409) {
-      alert('Conflict!');
-    } else if (!response.ok) {
-      alert('Bad.');
+
+    if (response.ok) {
+      alert("Success!");
     } else {
-      alert('Success!')
+      const resBody = await response.json();
+      const message = resBody["message"];
+      alert(message);
     }
   };
 
