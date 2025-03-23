@@ -1,5 +1,6 @@
-import {ActionIcon, AppShellHeader, Burger, Flex, Title, useMantineColorScheme} from "@mantine/core";
-import {IconMoon, IconSun, IconLogout} from "@tabler/icons-react";
+import {ActionIcon, AppShellHeader, Burger, Flex, Title, useMantineColorScheme, Modal, Button, Group, Text} from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import {IconMoon, IconSun, IconLogout, IconSettings, IconTrash} from "@tabler/icons-react";
 import { useRouter } from 'next/router';
 import { useEffect, useState } from "react";
 import { useNotes } from "@/context/NotesContext";
@@ -15,6 +16,9 @@ export default function Header({ opened, toggle }: HeaderProps) {
     const { colorScheme, setColorScheme } = useMantineColorScheme();
     const [mounted, setMounted] = useState(false);
     const dark = colorScheme === 'dark';
+    const [openedSettings, { open: openSettings, close: closeModal }] = useDisclosure(false);
+    const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+    
     const toggleColorScheme = () => {
         setColorScheme(colorScheme === 'dark' ? 'light' : 'dark');
     }
@@ -23,14 +27,62 @@ export default function Header({ opened, toggle }: HeaderProps) {
         setMounted(true);
     }, []);
 
+    // Custom close function that resets the modal state
+    const close = () => {
+        closeModal();
+        setShowDeleteConfirmation(false);
+    };
+
     const handleLogout = () => {
         localStorage.removeItem('userId');
         resetContext();
         router.push('/login');
     };
+    
+    const handleDeleteAccount = () => {
+        // Empty function for now
+        // Add account deletion logic here
+        setShowDeleteConfirmation(false);
+        close();
+    };
+
+    const toggleDeleteConfirmation = () => {
+        setShowDeleteConfirmation(!showDeleteConfirmation);
+    };
 
     return (
         <AppShellHeader p="sm">
+            <Modal 
+                opened={openedSettings} 
+                onClose={close} 
+                title="Manage Account" 
+                centered
+            >
+                <Flex direction="column" p="md" gap="md">
+                    {!showDeleteConfirmation ? (
+                        <Button 
+                            color="red" 
+                            onClick={toggleDeleteConfirmation}
+                            fullWidth
+                        >
+                            Delete Account
+                        </Button>
+                    ) : (
+                        <>
+                            <Text mb="lg">Are you sure you want to delete your account? This action cannot be undone.</Text>
+                            <Group>
+                                <Button variant="outline" onClick={toggleDeleteConfirmation}>
+                                    No, Cancel
+                                </Button>
+                                <Button color="red" onClick={handleDeleteAccount}>
+                                    Yes, Delete Account
+                                </Button>
+                            </Group>
+                        </>
+                    )}
+                </Flex>
+            </Modal>
+            
             <Flex justify="space-between" align="center">
                 <Flex justify="space-between" align="center">
                     <Burger opened={opened} onClick={toggle} />
@@ -46,6 +98,14 @@ export default function Header({ opened, toggle }: HeaderProps) {
                             size="xl"
                         >
                             {dark ? <IconSun size="1.6rem"></IconSun> : <IconMoon size="1.6rem"></IconMoon>}
+                        </ActionIcon>
+                        <ActionIcon
+                            variant="outline"
+                            color={'gray'}
+                            onClick={openSettings}
+                            size="xl"
+                        >
+                            <IconSettings />
                         </ActionIcon>
                         <ActionIcon
                             variant="outline"
