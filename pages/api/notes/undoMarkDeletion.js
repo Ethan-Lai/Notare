@@ -6,13 +6,16 @@ const prisma = new PrismaClient();
 async function handler(req, res) {
   if (req.method === 'POST') {
     try {
-      const { noteId } = req.body;
+      const { noteId, newTag } = req.body;
       const authorId = req.userId;
 
       // need a note to delete and a user making tbe request
       if (!noteId || !authorId) {
         return res.status(400).json({ error: 'Note ID and Author ID are required' });
       }
+      if (newTag === undefined || typeof newTag !== 'number') {
+        return res.status(400).json({ message: 'Invalid tag' });
+      }  
 
       const note = await prisma.note.findUnique({
         where: { id: noteId },
@@ -29,7 +32,7 @@ async function handler(req, res) {
       // mark it for deletion
       const updatedNote = await prisma.note.update({
         where: { id: noteId },
-        data: { canDelete: false, tag: 0 },
+        data: { canDelete: false, tag: newTag },
       });
 
       res.status(200).json(updatedNote);
