@@ -101,29 +101,41 @@ export default function Sidebar({ opened }) {
     const handleCreateNote = async () => {
         // Verify user is logged in
         if (!user.isLoggedIn) {
-            alert('Please log in to create notes');
-            router.push('/login');
-            return;
+          alert('Please log in to create notes');
+          router.push('/login');  // Redirect to login if no user ID
+          return;
         }
-
+    
+        // Check if there are any existing tags
+        if (tags.length === 0) {
+          notifications.show({
+            color: 'yellow',
+            title: 'No Tags Available',
+            message: 'Please create a tag first using the "New Tag" button in the sidebar.',
+            position: "top-center"
+          });
+          return;
+        }
+    
+        // Make API call to create empty note with the first available tag
         try {
-            await createNote();
-            notifications.show({
-                color: 'green',
-                title: 'Success',
-                message: 'New note created successfully',
-                position: "top-center"
-            });
+          const createdNote = await createNote({
+            title: '',
+            content: '',
+            tag: tags[0], // Use the first available tag
+            canDelete: false
+          });
+          openNote(createdNote.id);
         } catch (error) {
-            console.error(error);
-            notifications.show({
-                color: 'red',
-                title: 'Error',
-                message: "Sorry, there was an issue creating your note.",
-                position: "top-center"
-            });
+          console.error(error);
+          notifications.show({
+            color: 'red',
+            title: 'Error',
+            message: "Sorry, there was an issue creating your note.",
+            position: "top-center"
+          })
         }
-    }
+      };
 
     if (!opened) {
         return null;
