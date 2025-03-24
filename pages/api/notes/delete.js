@@ -1,15 +1,17 @@
 import { PrismaClient } from '@prisma/client';
+import withAuth from "../../../lib/withAuth";
 
 const prisma = new PrismaClient();
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method === 'POST') {
     try {
-      const { noteId, authorId } = req.body;
+      const { noteId } = req.body;
+      const authorId = req.userId;
 
       // need a note to delete and a user making tbe request
-      if (!noteId || !authorId) {
-        return res.status(400).json({ error: 'Note ID and Author ID are required' });
+      if (!noteId) {
+        return res.status(400).json({ error: 'Note ID is required' });
       }
 
       const note = await prisma.note.findUnique({
@@ -41,3 +43,5 @@ export default async function handler(req, res) {
     res.status(405).json({ message: 'Method not allowed' });
   }
 }
+
+export default withAuth(handler);

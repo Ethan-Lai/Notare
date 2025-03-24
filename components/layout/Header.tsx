@@ -4,6 +4,7 @@ import {IconMoon, IconSun, IconLogout, IconSettings, IconTrash} from "@tabler/ic
 import { useRouter } from 'next/router';
 import { useEffect, useState } from "react";
 import { useNotes } from "@/context/NotesContext";
+import {useAuth} from "@/context/AuthContext";
 
 interface HeaderProps {
     opened: boolean,
@@ -23,6 +24,8 @@ export default function Header({ opened, toggle }: HeaderProps) {
         setColorScheme(colorScheme === 'dark' ? 'light' : 'dark');
     }
 
+    const { logout } = useAuth();
+
     useEffect(() => {
         setMounted(true);
     }, []);
@@ -33,10 +36,14 @@ export default function Header({ opened, toggle }: HeaderProps) {
         setShowDeleteConfirmation(false);
     };
 
-    const handleLogout = () => {
-        localStorage.removeItem('userId');
+    const handleLogout = async () => {
+        await logout();
         resetContext();
-        router.push('/login');
+        await router.push('/login');
+    };
+
+        resetContext();
+        await router.push('/login');
     };
     
     const handleDeleteAccount = () => {

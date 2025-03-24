@@ -7,6 +7,7 @@ import Head from "next/head";
 import {Notifications} from "@mantine/notifications";
 import { NotesProvider } from '../context/NotesContext'
 import { ChatProvider } from '../context/ChatContext'
+import {AuthProvider} from "@/context/AuthContext";
 
 const theme = createTheme({
     primaryColor: "blue",
@@ -23,12 +24,14 @@ export default function App({ Component, pageProps }: AppProps) {
                 />
                 <link rel="shortcut icon" href="/favicon.ico" />
             </Head>
-            <ChatProvider>
-                <NotesProvider>
-                    <Notifications autoClose={1000} />
-                    <Component {...pageProps} />
-                </NotesProvider>
-            </ChatProvider>
+            <AuthProvider>
+                <ChatProvider>
+                    <NotesProvider>
+                        <Notifications autoClose={1000} />
+                        <Component {...pageProps} />
+                    </NotesProvider>
+                </ChatProvider>
+            </AuthProvider>
         </MantineProvider>
     );
 }

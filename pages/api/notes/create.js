@@ -1,15 +1,13 @@
 import { PrismaClient } from '@prisma/client';
+import withAuth from "../../../lib/withAuth";
 
 const prisma = new PrismaClient();
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method === 'POST') {
     try {
-      const { title, content, authorId, tag } = req.body;
-
-      if (!authorId) {
-        return res.status(400).json({ error: 'Author ID is required' });
-      }
+      const { title, content, tag } = req.body;
+      const authorId = req.userId;
 
       const newNote = await prisma.note.create({
         data: {
@@ -31,3 +29,4 @@ export default async function handler(req, res) {
   }
 }
 
+export default withAuth(handler);

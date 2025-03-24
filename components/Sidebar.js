@@ -4,10 +4,12 @@ import { useNotes } from '../context/NotesContext';
 import {IconHome2, IconPlus, IconTrash, IconTag} from "@tabler/icons-react";
 import {notifications} from "@mantine/notifications";
 import { useRouter } from 'next/router';
+import {useAuth} from "../context/AuthContext";
 
 export default function Sidebar({ opened }) {
     const [expandedTags, setExpandedTags] = useState({});
     const { notes, tags, activeNote, createNote, createTag, openNote, initialLoad, setActiveNoteId, updateNoteInDB } = useNotes();
+    const { user } = useAuth();
     const router = useRouter();
 
     // Sort notes by tag 
@@ -72,8 +74,7 @@ export default function Sidebar({ opened }) {
 
     const handleCreateTag = async () => {
         // Verify user is logged in
-        const userId = localStorage.getItem('userId');
-        if (!userId) {
+        if (!user.isLoggedIn) {
             alert('Please log in to create tags');
             router.push('/login');
             return;

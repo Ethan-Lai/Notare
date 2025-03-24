@@ -1,11 +1,13 @@
 import { PrismaClient } from '@prisma/client';
+import withAuth from "../../../lib/withAuth";
 
 const prisma = new PrismaClient();
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method === 'POST') {
     try {
-      const { noteId, authorId } = req.body;
+      const { noteId } = req.body;
+      const authorId = req.userId;
 
       // need a note to delete and a user making tbe request
       if (!noteId || !authorId) {
@@ -38,3 +40,5 @@ export default async function handler(req, res) {
     res.status(405).json({ message: 'Method not allowed' });
   }
 }
+
+export default withAuth(handler);
