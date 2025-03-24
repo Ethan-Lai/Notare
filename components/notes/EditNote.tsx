@@ -11,7 +11,7 @@ export interface EditNoteProps {
 }
 
 export default function EditNote({ note }: EditNoteProps) {
-    const { updateNoteLocally, updateNoteInDB, deleteNote, setActiveNoteId, closeNote, notes, revertDeletion } = useNotes();
+    const { updateNoteLocally, updateNoteInDB, deleteNote, setActiveNoteId, closeNote, notes, revertDeletion , tags} = useNotes();
     const { history } = useChat();
     const [saving, setSaving] = useState(false);
     const [hasEdited, setHasEdited] = useState(false);
@@ -22,9 +22,6 @@ export default function EditNote({ note }: EditNoteProps) {
     const [debouncedTitle] = useDebouncedValue(note.title, 500);
     const [debouncedContent] = useDebouncedValue(note.content, 500);
     const [debouncedTag] = useDebouncedValue(note.tag, 500);
-
-    // Get unique tags from all notes
-    const availableTags = [...new Set(notes.map(n => n.tag))].sort((a, b) => a - b);
 
     useEffect(() => {
         // Prevent API update call on initial load
@@ -321,7 +318,7 @@ export default function EditNote({ note }: EditNoteProps) {
                     placeholder="Select a tag"
                     value={note.tag.toString()}
                     onChange={handleTagChange}
-                    data={availableTags.map(tag => ({ value: tag.toString(), label: `Tag ${tag}` }))}
+                    data={tags.map(tag => ({ value: tag.toString(), label: `Tag ${tag}` }))}
                     maw={200}
                     size="xs"
                 />
