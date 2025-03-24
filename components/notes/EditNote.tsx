@@ -11,7 +11,7 @@ export interface EditNoteProps {
 }
 
 export default function EditNote({ note }: EditNoteProps) {
-    const { updateNoteLocally, updateNoteInDB, deleteNote, setActiveNoteId, closeNote, notes } = useNotes();
+    const { updateNoteLocally, updateNoteInDB, deleteNote, setActiveNoteId, closeNote, notes, revertDeletion } = useNotes();
     const { history } = useChat();
     const [saving, setSaving] = useState(false);
     const [hasEdited, setHasEdited] = useState(false);
@@ -24,10 +24,8 @@ export default function EditNote({ note }: EditNoteProps) {
     const [debouncedTag] = useDebouncedValue(note.tag, 500);
 
     // Get unique tags from all notes
-    // const availableTags = [...new Set(notes.map((n: Note) => n.tag))].sort((a: any, b: any) => a - b); 
-    // checks for tags already assigned to notes but what about empty tags?
-    // just directly use the tags from the context
-    const { tags } = useNotes();
+    const availableTags = [...new Set(notes.map(n => n.tag))].sort((a, b) => a - b);
+
     useEffect(() => {
         // Prevent API update call on initial load
         console.log(hasEdited);
@@ -65,9 +63,33 @@ export default function EditNote({ note }: EditNoteProps) {
 
     const handleTagChange = (val: string | null) => {
         const newTag = val ? parseInt(val) : 0;
+        if (note.tag === TRASH_TAG) {
+            handleUndoDeletion(newTag);
+        }
+        
         updateNoteLocally({ ...note, tag: newTag });
         setHasEdited(true);
     }
+
+    const handleUndoDeletion = async (newTag: number) => {
+        try {
+            await revertDeletion(note.id, newTag);
+            notifications.show({
+                color: 'green',
+                title: 'Success',
+                message: 'Note has been restored.',
+                position: 'top-right'
+            });
+        } catch (error) {
+            console.error('Error reverting note deletion:', error);
+            notifications.show({
+                color: 'red',
+                title: 'Error',
+                message: 'Failed to revert note deletion.',
+                position: 'top-right'
+            });
+        }
+    };
 
     const handleDeleteNote = async () => {
         
@@ -299,7 +321,7 @@ export default function EditNote({ note }: EditNoteProps) {
                     placeholder="Select a tag"
                     value={note.tag.toString()}
                     onChange={handleTagChange}
-                    data={tags.map((tag: any) => ({ value: tag.toString(), label: `Tag ${tag}` }))}
+                    data={availableTags.map(tag => ({ value: tag.toString(), label: `Tag ${tag}` }))}
                     maw={200}
                     size="xs"
                 />
