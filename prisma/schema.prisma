@@ -13,12 +13,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
 model User {
   id       Int   @id @default(autoincrement())
   email    String   @unique
   name     String   @unique
   password String
-  notes    Note[]
+  notes    Note[]  @relation("UserNotes")
 }
 
 model Note {
@@ -27,7 +28,7 @@ model Note {
   content   String
   tag       Int      @default(0)
   createdAt DateTime @default(now())
-  author    User     @relation(fields: [authorId], references: [id])
+  author    User     @relation("UserNotes", fields: [authorId], references: [id], onDelete: Cascade)
   authorId  Int
   canDelete Boolean  @default(false)
 }
