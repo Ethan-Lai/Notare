@@ -8,8 +8,8 @@ import { notifications } from "@mantine/notifications";
 import {useAuth} from "@/context/AuthContext";
 
 export default function NotesOverview() {
-  const { notes, initialLoad, createNote, openNote }: { notes: Note[]; initialLoad: boolean; createNote: Function; openNote: Function } = useNotes();
-  const [searchQuery, setSearchQuery] = useState("");
+  const { notes, initialLoad, createNote, openNote, tags }: { notes: Note[]; initialLoad: boolean; createNote: Function; openNote: Function; tags: number[] } = useNotes();
+  const [searchQuery, setSearchQuery] = useState(""); 
   const { user } = useAuth();
   const router = useRouter();
 
@@ -40,8 +40,7 @@ export default function NotesOverview() {
     }
 
     // Check if there are any existing tags
-    const existingTags = [...new Set(notes.map(n => n.tag))].filter(tag => tag !== -1);
-    if (existingTags.length === 0) {
+    if (tags.length === 0) {
       notifications.show({
         color: 'yellow',
         title: 'No Tags Available',
@@ -56,7 +55,7 @@ export default function NotesOverview() {
       const createdNote = await createNote({
         title: '',
         content: '',
-        tag: existingTags[0], // Use the first available tag
+        tag: tags[0], // Use the first available tag
         canDelete: false
       });
       openNote(createdNote.id);
