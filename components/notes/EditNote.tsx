@@ -24,8 +24,10 @@ export default function EditNote({ note }: EditNoteProps) {
     const [debouncedTag] = useDebouncedValue(note.tag, 500);
 
     // Get unique tags from all notes
-    const availableTags = [...new Set(notes.map(n => n.tag))].sort((a, b) => a - b);
-
+    // const availableTags = [...new Set(notes.map((n: Note) => n.tag))].sort((a: any, b: any) => a - b); 
+    // checks for tags already assigned to notes but what about empty tags?
+    // just directly use the tags from the context
+    const { tags } = useNotes();
     useEffect(() => {
         // Prevent API update call on initial load
         console.log(hasEdited);
@@ -297,7 +299,7 @@ export default function EditNote({ note }: EditNoteProps) {
                     placeholder="Select a tag"
                     value={note.tag.toString()}
                     onChange={handleTagChange}
-                    data={availableTags.map(tag => ({ value: tag.toString(), label: `Tag ${tag}` }))}
+                    data={tags.map((tag: any) => ({ value: tag.toString(), label: `Tag ${tag}` }))}
                     maw={200}
                     size="xs"
                 />

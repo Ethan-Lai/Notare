@@ -98,6 +98,32 @@ export default function Sidebar({ opened }) {
             });
         }
     }
+    const handleCreateNote = async () => {
+        // Verify user is logged in
+        if (!user.isLoggedIn) {
+            alert('Please log in to create notes');
+            router.push('/login');
+            return;
+        }
+
+        try {
+            await createNote();
+            notifications.show({
+                color: 'green',
+                title: 'Success',
+                message: 'New note created successfully',
+                position: "top-center"
+            });
+        } catch (error) {
+            console.error(error);
+            notifications.show({
+                color: 'red',
+                title: 'Error',
+                message: "Sorry, there was an issue creating your note.",
+                position: "top-center"
+            });
+        }
+    }
 
     if (!opened) {
         return null;
@@ -115,6 +141,17 @@ export default function Sidebar({ opened }) {
                 style={{ flexShrink: 0 }} 
             >
                 New Tag
+            </Button>
+            <Button
+                size="sm"
+                variant="filled"
+                color="blue"
+                leftSection={<IconPlus size={16} />}
+                mb="md"
+                onClick={handleCreateNote}
+                style={{ flexShrink: 0 }} 
+            >
+                New Note
             </Button>
 
             <NavLink
