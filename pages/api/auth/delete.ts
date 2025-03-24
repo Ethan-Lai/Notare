@@ -11,13 +11,11 @@ export default async function handler(
         return res.status(405).json({ message: "Method not allowed" });
     }
 
-    // Verify username or email is provided
     const { username, email } = req.body;
     if (!username && !email) {
         return res.status(400).json({ message: "Username or email must be provided." });
     }
 
-    // Verify username/email are of string type
     if (username && typeof username !== "string") {
         return res.status(400).json({ message: "Username must be a string." });
     } else if (email && typeof email !== "string") {
@@ -25,7 +23,6 @@ export default async function handler(
     }
 
     try {
-        // Check if user exists based on username or email
         const existingUser: User | null = await prisma.user.findFirst({
             where: {
                 OR: [
@@ -39,7 +36,6 @@ export default async function handler(
             return res.status(404).json({ message: "User not found" });
         }
 
-        // Delete the user from the database
         await prisma.user.delete({
             where: {
                 id: existingUser.id
