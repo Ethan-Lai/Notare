@@ -19,7 +19,7 @@ if [ ! -f .env ]; then
 fi
 
 source .env
-if [ -z "$IRON_KEY" ] || [ "$IRON_KEY" = "REPLACE_WITH_YOUR_IRON_KEY" ]; then
+if [ -z "$SESSION_SECRET" ] || [ "$SESSION_SECRET" = "REPLACE_WITH_YOUR_IRON_KEY" ]; then
     echo "Error: IRON_KEY not set. Please update your .env file with a valid IRON_KEY."
     exit 1
 fi
