@@ -7,7 +7,7 @@ async function handler(req, res) {
   if (req.method === 'PUT') {
     try {
       // NOTE: Need to check whether user owns note
-      const { id, title, content, tag } = req.body;
+      const { id, title, content, tag, format } = req.body;
 
       if (!id) {
         return res.status(400).json({ error: 'Note ID is required' });
@@ -15,7 +15,7 @@ async function handler(req, res) {
 
       const updatedNote = await prisma.note.update({
         where: { id },
-        data: { title, content, tag },
+        data: { title, content, tag, format },
       });
 
       res.status(200).json(updatedNote);

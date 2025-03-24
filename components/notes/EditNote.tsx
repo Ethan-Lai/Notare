@@ -2,7 +2,7 @@ import {Group, Select, Stack, Text, Textarea, TextInput, Button} from "@mantine/
 import {useNotes} from "@/context/NotesContext";
 import {useDebouncedValue} from "@mantine/hooks";
 import {ChangeEvent, useEffect, useState} from "react";
-import {IconRefresh, IconTrash, IconRobot} from "@tabler/icons-react";
+import {IconRefresh, IconTrash, IconRobot, IconArrowDown} from "@tabler/icons-react";
 import {notifications} from "@mantine/notifications";
 import {useChat} from "@/context/ChatContext";
 
@@ -11,7 +11,7 @@ export interface EditNoteProps {
 }
 
 export default function EditNote({ note }: EditNoteProps) {
-    const { updateNoteLocally, updateNoteInDB, deleteNote, setActiveNoteId, closeNote, notes } = useNotes();
+    const { updateNoteLocally, updateNoteInDB, deleteNote, setActiveNoteId, closeNote, notes, exportNote } = useNotes();
     const { history } = useChat();
     const [saving, setSaving] = useState(false);
     const [hasEdited, setHasEdited] = useState(false);
@@ -67,6 +67,29 @@ export default function EditNote({ note }: EditNoteProps) {
         const newTag = val ? parseInt(val) : 0;
         updateNoteLocally({ ...note, tag: newTag });
         setHasEdited(true);
+    }
+    
+    const handleExportNote = async () => {
+        try {
+            const result = await exportNote(note.id, note.format || 'pdf');
+            if (result === true) {
+                notifications.show({
+                    color: 'green',
+                    title: 'Export Successful',
+                    message: 'Note exported successfully',
+                    position: "top-center"
+                });
+            } else {
+                throw result; // Rethrow the error
+            }
+        } catch (error) {
+            notifications.show({
+                color: 'red',
+                title: 'Export Failed',
+                message: error instanceof Error ? error.message : 'Unable to export note',
+                position: "top-center"
+            });
+        }
     }
 
     const handleDeleteNote = async () => {
@@ -321,6 +344,15 @@ export default function EditNote({ note }: EditNoteProps) {
                             Insert AI Response
                         </Button>
                     )}
+                    <Button
+                        color="blue"
+                        leftSection={<IconArrowDown size={16} />}
+                        onClick={handleExportNote}
+                        mt="md"
+                    >
+                        Export Note
+                    </Button>
+
                     <Button
                         color="red"
                         leftSection={<IconTrash size={16} />}

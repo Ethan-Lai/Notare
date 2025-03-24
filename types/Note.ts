@@ -6,4 +6,5 @@ type Note = {
     createdAt: Date;
     canDelete: boolean;
     authorId: number;
+    format: string;
 }

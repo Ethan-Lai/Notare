@@ -154,7 +154,39 @@ export function NotesProvider({ children }) {
 
     const deleteNote = (noteId) => {
         setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
-      };
+    };
+
+    const exportNote = async (noteId, format = 'pdf') => {
+        try {
+            const response = await fetch('/api/notes/export', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ noteId, format })
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                throw new Error(data.message || 'Failed to export note');
+            }
+
+            // Create a temporary link to trigger download
+            const link = document.createElement('a');
+            link.href = data.file;
+            link.download = data.filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            return true;
+        } catch (error) {
+            console.error('Export Note Error:', error);
+            return error;
+        }
+    };
+    
 
     useEffect(() => {
         fetchNotes()
@@ -176,7 +208,8 @@ export function NotesProvider({ children }) {
             openNote,
             closeNote,
             openedNotes,
-            resetContext
+            resetContext, 
+            exportNote
         }}>
             {children}
         </NotesContext.Provider>
