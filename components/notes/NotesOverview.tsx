@@ -9,7 +9,7 @@ import {useAuth} from "@/context/AuthContext";
 
 export default function NotesOverview() {
   const { notes, initialLoad, createNote, openNote, tags }: { notes: Note[]; initialLoad: boolean; createNote: Function; openNote: Function; tags: number[] } = useNotes();
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(""); 
   const { user } = useAuth();
   const router = useRouter();
 
