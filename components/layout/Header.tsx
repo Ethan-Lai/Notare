@@ -41,10 +41,6 @@ export default function Header({ opened, toggle }: HeaderProps) {
         resetContext();
         await router.push('/login');
     };
-
-        resetContext();
-        await router.push('/login');
-    };
     
     const handleDeleteAccount = () => {
         // Empty function for now
