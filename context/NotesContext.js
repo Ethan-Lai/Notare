@@ -230,8 +230,7 @@ export function NotesProvider({ children }) {
             closeNote,
             openedNotes,
             resetContext, 
-            exportNote
-
+            exportNote,
             revertDeletion
         }}>
             {children}
