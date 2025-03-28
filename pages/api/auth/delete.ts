@@ -1,48 +1,53 @@
 import {NextApiRequest, NextApiResponse} from "next";
-import {PrismaClient, User} from "@prisma/client";
-const bcrypt = require("bcrypt");
+import {PrismaClient} from "@prisma/client";
+import {getIronSession} from "iron-session";
+import {SessionData, sessionOptions} from "@/lib/lib";
+import withAuth from "@/lib/withAuth";
 
 const prisma = new PrismaClient();
 
-export default async function handler(
+async function handler(
     req: NextApiRequest,
     res: NextApiResponse,
 ) {
-    if (req.method !== "POST") {
+    if (req.method !== "DELETE") {
         return res.status(405).json({ message: "Method not allowed" });
     }
 
-    // Verify username, email, and password are provided
-    const { email } = req.body;
-    if (!email) {
-        return res.status(400).json({ message: "Email is required." });
-    }
-
-    // Verify all are of string type
-    if (typeof email !== "string") {
-        return res.status(400).json({ message: "Email must be a string." });
-    }
-
     try {
-        // Check if username/email exist
-        const existingUser: User | null = await prisma.user.findFirst({
-            where: {
-                email: email.toLowerCase()
-            },
-        });
-        if (!existingUser) {
-            const message = "User not found.";
-            return res.status(400).json({ message });
+        // Get user ID from session (already verified by withAuth middleware)
+        const userId = (req as any).userId;
+        
+        if (!userId || isNaN(userId)) {
+            return res.status(400).json({ message: "Invalid user ID" });
         }
 
-        await prisma.user.delete({
+        // Delete all notes associated with the user
+        await prisma.note.deleteMany({
             where: {
-                id: existingUser.id
+                authorId: userId
             }
         });
+
+        // Delete the user
+        await prisma.user.delete({
+            where: {
+                id: userId
+            }
+        });
+
+        // Clear the session
+        const session = await getIronSession<SessionData>(req, res, sessionOptions);
+        session.destroy();
 
         return res.status(200).json({ message: "Account successfully deleted" });
     } catch (e) {
         console.error(e);
+        return res.status(500).json({ message: "An error occurred while deleting the account" });
+    } finally {
+        await prisma.$disconnect();
     }
 }
+
+// Wrap with our authentication middleware
+export default withAuth(handler);
