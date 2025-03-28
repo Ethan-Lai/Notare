@@ -192,6 +192,27 @@ export function NotesProvider({ children }) {
         fetchNotes()
     }, []);
 
+    const revertDeletion = async (noteId, newTag) => {
+        const response = await fetch('/api/notes/undoMarkDeletion', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ noteId, newTag }),
+        });
+
+        if (response.ok) {
+            const updatedNote = await response.json();
+            setNotes(prevNotes =>
+                prevNotes.map(note =>
+                note.id === updatedNote.id ? updatedNote : note
+                )
+            );
+            return updatedNote;
+        }
+        throw new Error('Failed to revert note deletion');
+    };
+
     return (
         <NotesContext.Provider value={{
             initialLoad,
@@ -210,6 +231,8 @@ export function NotesProvider({ children }) {
             openedNotes,
             resetContext, 
             exportNote
+
+            revertDeletion
         }}>
             {children}
         </NotesContext.Provider>
