@@ -19,6 +19,7 @@ export default function Header({ opened, toggle }: HeaderProps) {
     const dark = colorScheme === 'dark';
     const [openedSettings, { open: openSettings, close: closeModal }] = useDisclosure(false);
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     
     const toggleColorScheme = () => {
         setColorScheme(colorScheme === 'dark' ? 'light' : 'dark');
@@ -42,11 +43,30 @@ export default function Header({ opened, toggle }: HeaderProps) {
         await router.push('/login');
     };
     
-    const handleDeleteAccount = () => {
-        // Empty function for now
-        // Add account deletion logic here
-        setShowDeleteConfirmation(false);
-        close();
+    const handleDeleteAccount = async () => {
+        setIsDeleting(true);
+        try {
+            const response = await fetch('/api/auth/delete', {
+                method: 'DELETE',
+            });
+            
+            if (!response.ok) {
+                const data = await response.json();
+                alert(data.message || 'Failed to delete account');
+                return;
+            }
+            
+            // Account deleted successfully
+            resetContext();
+            await router.push('/login');
+        } catch (e) {
+            console.error(e);
+            alert('An error occurred while deleting your account');
+        } finally {
+            setIsDeleting(false);
+            setShowDeleteConfirmation(false);
+            close();
+        }
     };
 
     const toggleDeleteConfirmation = () => {
@@ -77,7 +97,11 @@ export default function Header({ opened, toggle }: HeaderProps) {
                                 <Button variant="outline" onClick={toggleDeleteConfirmation}>
                                     No, Cancel
                                 </Button>
-                                <Button color="red" onClick={handleDeleteAccount}>
+                                <Button 
+                                    color="red" 
+                                    onClick={handleDeleteAccount}
+                                    loading={isDeleting}
+                                >
                                     Yes, Delete Account
                                 </Button>
                             </Group>
