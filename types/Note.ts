@@ -7,4 +7,5 @@ type Note = {
     canDelete: boolean;
     authorId: number;
     format: string;
+    alphabet: string;
 }

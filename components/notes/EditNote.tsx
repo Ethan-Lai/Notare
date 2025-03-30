@@ -1,4 +1,4 @@
-import {Group, Select, Stack, Text, Textarea, TextInput, Button} from "@mantine/core";
+import {Group, Select, Stack, Text, Textarea, TextInput, Button, Modal, Flex} from "@mantine/core";
 import {useNotes} from "@/context/NotesContext";
 import {useDebouncedValue} from "@mantine/hooks";
 import {ChangeEvent, useEffect, useState} from "react";
@@ -18,11 +18,23 @@ export default function EditNote({ note }: EditNoteProps) {
     const [hasEdited, setHasEdited] = useState(false);
     const [isLoadingAI, setIsLoadingAI] = useState(false);
     const TRASH_TAG = -1; 
+    const [openedSettings, setOpenedSettings] = useState(false);
 
     // Update note in DB automatically shortly after user has stopped typing
     const [debouncedTitle] = useDebouncedValue(note.title, 500);
     const [debouncedContent] = useDebouncedValue(note.content, 500);
     const [debouncedTag] = useDebouncedValue(note.tag, 500);
+
+    const alphabets = [
+        { value: 'latin', label: 'Default (supports most alphabets, limited support for CJK)' },
+        { value: 'hebrew', label: 'Hebrew' },
+        { value: 'arabic', label: 'Arabic' },
+        { value: 'schinese', label: 'Latin, Greek, Cyrillic, CJK' },
+        { value: 'thai', label: 'Thai' },
+        { value: 'devanagari', label: 'Devanagari' },
+    ];
+    const margins = { top: 20, bottom: 20, left: 20, right: 20 };
+
 
     useEffect(() => {
         // Prevent API update call on initial load
@@ -68,29 +80,44 @@ export default function EditNote({ note }: EditNoteProps) {
         updateNoteLocally({ ...note, tag: newTag });
         setHasEdited(true);
     }
-    
-    const handleExportNote = async () => {
-        try {
-            const result = await exportNote(note.id, note.format || 'pdf');
-            if (result === true) {
-                notifications.show({
-                    color: 'green',
-                    title: 'Export Successful',
-                    message: 'Note exported successfully',
-                    position: "top-center"
-                });
-            } else {
-                throw result; // Rethrow the error
-            }
-        } catch (error) {
-            notifications.show({
-                color: 'red',
-                title: 'Export Failed',
-                message: error instanceof Error ? error.message : 'Unable to export note',
-                position: "top-center"
-            });
-        }
+
+    const handleAlphabetChange = (val: string | null) => {        
+        updateNoteLocally({ ...note, alphabet: val });
+        setHasEdited(true);        
     }
+
+    const handleMarginsChange = (val: { top: number; bottom: number; left: number; right: number }) => {
+        updateNoteLocally({ ...note, margins: val });
+        setHasEdited(true);
+    }
+
+    const openSettings = () => setOpenedSettings(true);
+    const closeSettings = () => setOpenedSettings(false);
+
+    const handleExportNote = async () => {
+        // Show modal for settings before exporting
+        openSettings();
+        
+    };
+
+    const handleExport = async () => {
+      try {
+        const result = await exportNote(note.id, note.format || 'pdf', margins, note.alphabet);
+        if (result.success) {
+          // Open the download URL
+          window.open(result.downloadUrl, '_blank');
+          notifications.show({
+            color: 'green',
+            message: `Exported note as ${result.filename}`,
+          });
+        }
+      } catch (error) {
+        notifications.show({
+          color: 'red',
+          message: 'Export failed',
+        });
+      }
+    };
 
     const handleUndoDeletion = async (newTag: number) => {
         try {
@@ -334,6 +361,8 @@ export default function EditNote({ note }: EditNoteProps) {
         e.dataTransfer.dropEffect = "copy";
     };
 
+    
+
     return (
         <Stack p={0} gap={0} mt="sm">
             <Group justify="space-between">
@@ -364,14 +393,78 @@ export default function EditNote({ note }: EditNoteProps) {
                             Insert AI Response
                         </Button>
                     )}
-                    <Button
-                        color="blue"
-                        leftSection={<IconArrowDown size={16} />}
-                        onClick={handleExportNote}
-                        mt="md"
-                    >
-                        Export Note
-                    </Button>
+                    <div>
+                        {/* Export Button */}
+                        <Button
+                            color="blue"
+                            leftSection={<IconArrowDown size={16} />}
+                            onClick={handleExportNote}
+                            mt="md"
+                        >
+                            Export Note
+                        </Button>
+
+                        {/* Export Settings Modal */}
+                        <Modal
+                            opened={openedSettings}
+                            onClose={closeSettings}
+                            title="Export Settings"
+                            centered
+                        >
+                            <Flex direction="column" p="md" gap="md">
+                                <Text size="sm">Set the margins and alphabet for your export:</Text>
+
+                                <TextInput
+                                    label="Top Margin (px)"
+                                    value={margins.top}
+                                    onChange={(e) => handleMarginsChange({ ...margins, top: parseInt(e.target.value) })}
+                                    type="number"
+                                    required
+                                />
+
+                                <TextInput
+                                    label="Bottom Margin (px)"
+                                    value={margins.bottom}
+                                    onChange={(e) => handleMarginsChange({ ...margins, bottom: parseInt(e.target.value) })}
+                                    type="number"
+                                    required
+                                />
+
+                                <TextInput
+                                    label="Left Margin (px)"
+                                    value={margins.left}
+                                    onChange={(e) => handleMarginsChange({ ...margins, left: parseInt(e.target.value) })}
+                                    type="number"
+                                    required
+                                />
+
+                                <TextInput
+                                    label="Right Margin (px)"
+                                    value={margins.right}
+                                    onChange={(e) => handleMarginsChange({ ...margins, right: parseInt(e.target.value) })}
+                                    type="number"
+                                    required
+                                />
+
+                                <Select
+                                    label="Alphabet"
+                                    value={note.alphabet}  // Use the local state
+                                    onChange={handleAlphabetChange}
+                                    data={alphabets}
+                                    required
+                                />
+
+                                <Group justify="space-between" mt="md">
+                                    <Button variant="outline" onClick={closeSettings}>
+                                        Cancel
+                                    </Button>
+                                    <Button color="blue" onClick={handleExport}>
+                                        Export
+                                    </Button>
+                                </Group>
+                            </Flex>
+                        </Modal>
+                    </div>
 
                     <Button
                         color="red"
@@ -383,6 +476,7 @@ export default function EditNote({ note }: EditNoteProps) {
                     </Button>
                 </Group>
             </Group>
+            
 
             <TextInput
                 value={note.title}
@@ -392,6 +486,7 @@ export default function EditNote({ note }: EditNoteProps) {
                 variant="unstyled"
                 fw={600}
             />
+            
 
             <Textarea
                 minRows={8}

@@ -156,35 +156,27 @@ export function NotesProvider({ children }) {
         setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
     };
 
-    const exportNote = async (noteId, format = 'pdf') => {
-        try {
+    const exportNote = async (noteId, format = 'pdf', margin, alphabet) => {
+        
             const response = await fetch('/api/notes/export', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ noteId, format })
+                body: JSON.stringify({ noteId, format, margin, alphabet })
             });
 
-            const data = await response.json();
+            const result = await response.json();
 
-            if (!data.success) {
-                throw new Error(data.message || 'Failed to export note');
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to export note');
             }
 
-            // Create a temporary link to trigger download
-            const link = document.createElement('a');
-            link.href = data.file;
-            link.download = data.filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            // Open the download URL
+            window.open(result.downloadUrl, '_blank');
 
             return true;
-        } catch (error) {
-            console.error('Export Note Error:', error);
-            return error;
-        }
+        
     };
     
 
@@ -231,7 +223,8 @@ export function NotesProvider({ children }) {
             openedNotes,
             resetContext, 
             exportNote,
-            revertDeletion
+            revertDeletion,
+
         }}>
             {children}
         </NotesContext.Provider>
