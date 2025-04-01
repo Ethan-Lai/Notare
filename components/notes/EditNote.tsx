@@ -33,7 +33,8 @@ export default function EditNote({ note }: EditNoteProps) {
         { value: 'thai', label: 'Thai' },
         { value: 'devanagari', label: 'Devanagari' },
     ];
-    const margins = { top: 20, bottom: 20, left: 20, right: 20 };
+    const [margins, setMargins] = useState({ top: 20, bottom: 20, left: 20, right: 20 });
+
 
 
     useEffect(() => {
@@ -87,9 +88,11 @@ export default function EditNote({ note }: EditNoteProps) {
     }
 
     const handleMarginsChange = (val: { top: number; bottom: number; left: number; right: number }) => {
+        setMargins(val);
         updateNoteLocally({ ...note, margins: val });
         setHasEdited(true);
     }
+
 
     const openSettings = () => setOpenedSettings(true);
     const closeSettings = () => setOpenedSettings(false);
@@ -361,6 +364,8 @@ export default function EditNote({ note }: EditNoteProps) {
         e.dataTransfer.dropEffect = "copy";
     };
 
+
+    
     
 
     return (
@@ -417,34 +422,44 @@ export default function EditNote({ note }: EditNoteProps) {
                                 <TextInput
                                     label="Top Margin (px)"
                                     value={margins.top}
-                                    onChange={(e) => handleMarginsChange({ ...margins, top: parseInt(e.target.value) })}
+                                    onChange={(e) => handleMarginsChange({ 
+                                        ...margins, 
+                                        top: parseInt(e.target.value || '0') 
+                                    })}
                                     type="number"
                                     required
                                 />
-
                                 <TextInput
                                     label="Bottom Margin (px)"
                                     value={margins.bottom}
-                                    onChange={(e) => handleMarginsChange({ ...margins, bottom: parseInt(e.target.value) })}
+                                    onChange={(e) => handleMarginsChange({ 
+                                        ...margins, 
+                                        bottom: parseInt(e.target.value || '0') 
+                                    })}
                                     type="number"
                                     required
                                 />
-
                                 <TextInput
                                     label="Left Margin (px)"
                                     value={margins.left}
-                                    onChange={(e) => handleMarginsChange({ ...margins, left: parseInt(e.target.value) })}
+                                    onChange={(e) => handleMarginsChange({ 
+                                        ...margins, 
+                                        left: parseInt(e.target.value || '0') 
+                                    })}
+                                    type="number"
+                                    required
+                                />
+                                <TextInput
+                                    label="Right Margin (px)"
+                                    value={margins.right}
+                                    onChange={(e) => handleMarginsChange({ 
+                                        ...margins, 
+                                        right: parseInt(e.target.value || '0') 
+                                    })}
                                     type="number"
                                     required
                                 />
 
-                                <TextInput
-                                    label="Right Margin (px)"
-                                    value={margins.right}
-                                    onChange={(e) => handleMarginsChange({ ...margins, right: parseInt(e.target.value) })}
-                                    type="number"
-                                    required
-                                />
 
                                 <Select
                                     label="Alphabet"
