@@ -58,7 +58,7 @@ export default async function handler(req, res) {
         'devanagari': ['NotoSerifDevanagari-Regular', 'normal'],
       };
 
-      const [font, style] = fontMap[alphabet] || ['arial-unicode-ms', 'normal'];
+      const [font, style] = fontMap[alphabet] || ['times', 'normal'];
       doc.setFont(font, style);
       doc.setFontSize(16);
 
